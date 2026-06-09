@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, Button, Input } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
@@ -24,17 +24,19 @@ const MembersPage: React.FC = () => {
   const [newAge, setNewAge] = useState('');
   const [newHeight, setNewHeight] = useState('');
   const [newRelation, setNewRelation] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useDidShow(() => {
-    console.log('[MembersPage] Page showed, members count:', members.length);
+    setRefreshKey((k) => k + 1);
+    console.log('[MembersPage] Page showed, refresh data, members count:', members.length);
   });
 
-  const getMemberStats = (memberId: string) => {
+  const getMemberStats = useCallback((memberId: string) => {
     const records = getDailyRecordsByMember(memberId);
     const streak = calculateStreak(records);
     const completionRate = calculateCompletionRate(records, 30);
     return { streak, completionRate };
-  };
+  }, [getDailyRecordsByMember, refreshKey]);
 
   const handleSelectMember = (memberId: string) => {
     setCurrentMember(memberId);
@@ -138,7 +140,10 @@ const MembersPage: React.FC = () => {
                 </Text>
                 <View className={styles.memberStats}>
                   <Text className={styles.memberStatItem}>
-                    🔥 连续打卡 {stats.streak} 天
+                    🔥 连续打卡 {stats.streak.current} 天
+                  </Text>
+                  <Text className={styles.memberStatItem}>
+                    🏆 最长 {stats.streak.longest} 天
                   </Text>
                   <Text className={styles.memberStatItem}>
                     ✅ 完成率 {stats.completionRate}%

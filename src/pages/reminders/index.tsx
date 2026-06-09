@@ -75,6 +75,7 @@ const RemindersPage: React.FC = () => {
 
   const handleToggle = (id: string) => {
     toggleReminder(id);
+    setRefreshKey((k) => k + 1);
     console.log('[RemindersPage] Toggle reminder:', id);
   };
 
@@ -85,6 +86,7 @@ const RemindersPage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           deleteReminder(id);
+          setRefreshKey((k) => k + 1);
           Taro.showToast({ title: '已删除', icon: 'success' });
           console.log('[RemindersPage] Delete reminder:', id);
         }
@@ -113,6 +115,7 @@ const RemindersPage: React.FC = () => {
     };
 
     addReminder(newReminder);
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: '已添加提醒', icon: 'success' });
     console.log('[RemindersPage] Quick add reminder:', newReminder);
   };
@@ -146,6 +149,7 @@ const RemindersPage: React.FC = () => {
     };
 
     addReminder(newReminder);
+    setRefreshKey((k) => k + 1);
     console.log('[RemindersPage] Save reminder:', newReminder);
     Taro.showToast({ title: '添加成功', icon: 'success' });
     setShowAddModal(false);

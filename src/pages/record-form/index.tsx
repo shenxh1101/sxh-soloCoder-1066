@@ -133,12 +133,20 @@ const RecordFormPage: React.FC = () => {
         break;
 
       case 'exam':
+        const validatedItems = examItems.map(item => {
+          const statusResult = judgeExamItemStatus(item);
+          return {
+            ...item,
+            status: statusResult.status,
+            isAbnormal: statusResult.isAbnormal
+          };
+        });
         const examRecord: ExamRecord = {
           id: Date.now().toString(),
           date: examDate,
           memberId: currentMemberId,
           hospital: examHospital,
-          items: examItems,
+          items: validatedItems,
           notes
         };
         addExamRecord(examRecord);
@@ -506,28 +514,78 @@ const RecordFormPage: React.FC = () => {
     console.log('[RecordFormPage] Remove exam item at index:', index);
   };
 
+  const judgeExamItemStatus = (item: ExamItem): { status: 'normal' | 'high' | 'low'; isAbnormal: boolean } => {
+    if (!item.value || !item.normalRange || item.normalRange === '-') {
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    const numValue = parseFloat(item.value);
+    if (isNaN(numValue)) {
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    const range = item.normalRange.trim();
+
+    const rangeMatch = range.match(/([\d.]+)\s*[-~]\s*([\d.]+)/);
+    if (rangeMatch) {
+      const min = parseFloat(rangeMatch[1]);
+      const max = parseFloat(rangeMatch[2]);
+      if (numValue < min) {
+        return { status: 'low', isAbnormal: true };
+      } else if (numValue > max) {
+        return { status: 'high', isAbnormal: true };
+      } else {
+        return { status: 'normal', isAbnormal: false };
+      }
+    }
+
+    const greaterMatch = range.match(/>\s*([\d.]+)/);
+    if (greaterMatch) {
+      const min = parseFloat(greaterMatch[1]);
+      if (numValue <= min) {
+        return { status: 'low', isAbnormal: true };
+      }
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    const lessMatch = range.match(/<\s*([\d.]+)/);
+    if (lessMatch) {
+      const max = parseFloat(lessMatch[1]);
+      if (numValue >= max) {
+        return { status: 'high', isAbnormal: true };
+      }
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    const greaterEqualMatch = range.match(/≥\s*([\d.]+)/);
+    if (greaterEqualMatch) {
+      const min = parseFloat(greaterEqualMatch[1]);
+      if (numValue < min) {
+        return { status: 'low', isAbnormal: true };
+      }
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    const lessEqualMatch = range.match(/≤\s*([\d.]+)/);
+    if (lessEqualMatch) {
+      const max = parseFloat(lessEqualMatch[1]);
+      if (numValue > max) {
+        return { status: 'high', isAbnormal: true };
+      }
+      return { status: 'normal', isAbnormal: false };
+    }
+
+    return { status: 'normal', isAbnormal: false };
+  };
+
   const handleUpdateExamItem = (index: number, field: keyof ExamItem, value: string) => {
     const updated = [...examItems];
     updated[index] = { ...updated[index], [field]: value };
     
-    if (field === 'value' && updated[index].normalRange) {
-      const numValue = parseFloat(value);
-      const range = updated[index].normalRange;
-      const rangeMatch = range.match(/([\d.]+)\s*[-~]\s*([\d.]+)/);
-      if (rangeMatch && !isNaN(numValue)) {
-        const min = parseFloat(rangeMatch[1]);
-        const max = parseFloat(rangeMatch[2]);
-        if (numValue < min) {
-          updated[index].status = 'low';
-          updated[index].isAbnormal = true;
-        } else if (numValue > max) {
-          updated[index].status = 'high';
-          updated[index].isAbnormal = true;
-        } else {
-          updated[index].status = 'normal';
-          updated[index].isAbnormal = false;
-        }
-      }
+    if (field === 'value' || field === 'normalRange') {
+      const statusResult = judgeExamItemStatus(updated[index]);
+      updated[index].status = statusResult.status;
+      updated[index].isAbnormal = statusResult.isAbnormal;
     }
     
     setExamItems(updated);

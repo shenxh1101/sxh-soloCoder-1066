@@ -54,12 +54,14 @@ const HabitsPage: React.FC = () => {
 
   const handleCheckIn = (item: string) => {
     checkIn(today, currentMemberId, item);
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: '打卡成功', icon: 'success' });
     console.log('[HabitsPage] Check in:', item);
   };
 
   const handleAddWater = () => {
     addWaterCup(today, currentMemberId);
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: '已记录 +1 杯', icon: 'success' });
     console.log('[HabitsPage] Add water cup');
   };
@@ -80,6 +82,7 @@ const HabitsPage: React.FC = () => {
       exerciseType: type,
       checkInItems: [...new Set([...(todayRecord.checkInItems || []), 'exercise'])]
     });
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: `已记录${minutes}分钟`, icon: 'success' });
     console.log('[HabitsPage] Quick add exercise:', type, minutes);
   };

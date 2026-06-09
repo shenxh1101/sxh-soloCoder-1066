@@ -77,12 +77,14 @@ const TodayPage: React.FC = () => {
 
   const handleCheckIn = (item: string) => {
     checkIn(today, currentMemberId, item);
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: '打卡成功', icon: 'success' });
     console.log('[TodayPage] Check in:', item);
   };
 
   const handleAddWater = () => {
     addWaterCup(today, currentMemberId);
+    setRefreshKey((k) => k + 1);
     Taro.showToast({ title: '已记录 +1 杯', icon: 'success' });
     console.log('[TodayPage] Add water cup');
   };
@@ -249,7 +251,7 @@ const TodayPage: React.FC = () => {
         ))}
       </View>
 
-      {abnormalRecords.length > 0 && (
+      {abnormalRecords && abnormalRecords.length > 0 && (
         <>
           <Text className={styles.sectionTitle}>异常提醒</Text>
           <View className={styles.alertCard}>
@@ -257,16 +259,17 @@ const TodayPage: React.FC = () => {
               <Text className={styles.alertIcon}>⚠️</Text>
               <Text className={styles.alertTitle}>异常指标提示</Text>
             </View>
-            {abnormalRecords.map((record) =>
-              record.abnormalItems.map((item, idx) => (
+            {abnormalRecords.map((record) => {
+              const items = record.abnormalItems || [];
+              return items.map((item, idx) => (
                 <View key={`${record.id}-${idx}`} className={styles.alertItem}>
                   <View className={styles.alertDot} />
                   <Text className={styles.alertText}>
                     {record.date} {item}
                   </Text>
                 </View>
-              ))
-            )}
+              ));
+            })}
           </View>
         </>
       )}
@@ -277,7 +280,7 @@ const TodayPage: React.FC = () => {
           <Text className={styles.suggestionIcon}>💡</Text>
           <Text className={styles.suggestionTitle}>今日建议</Text>
         </View>
-        {suggestions.slice(0, 3).map((suggestion, index) => (
+        {(suggestions || []).slice(0, 3).map((suggestion, index) => (
           <View key={index} className={styles.suggestionItem}>
             <Text className={styles.suggestionText}>{suggestion}</Text>
           </View>

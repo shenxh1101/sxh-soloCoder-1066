@@ -52,40 +52,62 @@ export const getStepsStatus = (steps: number, target: number): { status: string;
   return { status: '达标', color: '#22c55e' };
 };
 
-export const calculateStreak = (recordsOrDates: any[]): number => {
-  if (!recordsOrDates.length) return 0;
+export const calculateStreak = (recordsOrDates: any[]): { current: number; longest: number; totalDays: number } => {
+  if (!recordsOrDates || recordsOrDates.length === 0) {
+    return { current: 0, longest: 0, totalDays: 0 };
+  }
 
   const dates = recordsOrDates.map((item) => {
     if (typeof item === 'string') return item;
-    if (item.date) return item.date;
+    if (item && item.date) return item.date;
     return null;
   }).filter(Boolean) as string[];
 
-  const sortedDates = [...new Set(dates)].sort().reverse();
+  if (dates.length === 0) {
+    return { current: 0, longest: 0, totalDays: 0 };
+  }
+
+  const uniqueDates = [...new Set(dates)].sort();
+  const totalDays = uniqueDates.length;
+
   let currentStreak = 0;
-  let prevDate = dayjs();
+  let longestStreak = 0;
+  let tempStreak = 0;
+  let prevDate: dayjs.Dayjs | null = null;
 
-  for (let i = 0; i < sortedDates.length; i++) {
-    const date = dayjs(sortedDates[i]);
-    const diffDays = prevDate.diff(date, 'day');
-
-    if (i === 0) {
-      if (diffDays <= 1) {
-        currentStreak = 1;
-      } else {
-        break;
-      }
+  for (let i = 0; i < uniqueDates.length; i++) {
+    const date = dayjs(uniqueDates[i]);
+    if (prevDate === null) {
+      tempStreak = 1;
     } else {
+      const diffDays = date.diff(prevDate, 'day');
       if (diffDays === 1) {
-        currentStreak++;
+        tempStreak++;
       } else {
-        break;
+        tempStreak = 1;
       }
+    }
+    if (tempStreak > longestStreak) {
+      longestStreak = tempStreak;
     }
     prevDate = date;
   }
 
-  return currentStreak;
+  const lastDate = dayjs(uniqueDates[uniqueDates.length - 1]);
+  const today = dayjs().startOf('day');
+  const daysSinceLast = today.diff(lastDate, 'day');
+
+  if (daysSinceLast <= 1) {
+    currentStreak = tempStreak;
+  } else {
+    currentStreak = 0;
+  }
+
+  return {
+    current: currentStreak,
+    longest: longestStreak,
+    totalDays: totalDays
+  };
 };
 
 export const calculateCompletionRate = (records: any[], days: number = 30): number => {
