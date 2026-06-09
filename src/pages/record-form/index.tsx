@@ -487,6 +487,82 @@ const RecordFormPage: React.FC = () => {
     </View>
   );
 
+  const handleAddExamItem = () => {
+    const newItem: ExamItem = {
+      name: '',
+      value: '',
+      unit: '',
+      normalRange: '',
+      status: 'normal',
+      isAbnormal: false
+    };
+    setExamItems([...examItems, newItem]);
+    console.log('[RecordFormPage] Add exam item');
+  };
+
+  const handleRemoveExamItem = (index: number) => {
+    setExamItems(examItems.filter((_, i) => i !== index));
+    console.log('[RecordFormPage] Remove exam item at index:', index);
+  };
+
+  const handleUpdateExamItem = (index: number, field: keyof ExamItem, value: string) => {
+    const updated = [...examItems];
+    updated[index] = { ...updated[index], [field]: value };
+    
+    if (field === 'value' && updated[index].normalRange) {
+      const numValue = parseFloat(value);
+      const range = updated[index].normalRange;
+      const rangeMatch = range.match(/([\d.]+)\s*[-~]\s*([\d.]+)/);
+      if (rangeMatch && !isNaN(numValue)) {
+        const min = parseFloat(rangeMatch[1]);
+        const max = parseFloat(rangeMatch[2]);
+        if (numValue < min) {
+          updated[index].status = 'low';
+          updated[index].isAbnormal = true;
+        } else if (numValue > max) {
+          updated[index].status = 'high';
+          updated[index].isAbnormal = true;
+        } else {
+          updated[index].status = 'normal';
+          updated[index].isAbnormal = false;
+        }
+      }
+    }
+    
+    setExamItems(updated);
+  };
+
+  const commonExamItems = [
+    { name: '身高', unit: 'cm', normalRange: '' },
+    { name: '体重', unit: 'kg', normalRange: '' },
+    { name: 'BMI', unit: '', normalRange: '18.5-23.9' },
+    { name: '收缩压', unit: 'mmHg', normalRange: '90-140' },
+    { name: '舒张压', unit: 'mmHg', normalRange: '60-90' },
+    { name: '心率', unit: '次/分', normalRange: '60-100' },
+    { name: '空腹血糖', unit: 'mmol/L', normalRange: '3.9-6.1' },
+    { name: '总胆固醇', unit: 'mmol/L', normalRange: '2.8-5.2' },
+    { name: '甘油三酯', unit: 'mmol/L', normalRange: '0.4-1.7' },
+    { name: '高密度脂蛋白', unit: 'mmol/L', normalRange: '>1.0' },
+    { name: '低密度脂蛋白', unit: 'mmol/L', normalRange: '<3.4' },
+    { name: '尿酸', unit: 'μmol/L', normalRange: '150-420' },
+    { name: '谷丙转氨酶(ALT)', unit: 'U/L', normalRange: '0-40' },
+    { name: '谷草转氨酶(AST)', unit: 'U/L', normalRange: '0-40' },
+    { name: '血红蛋白', unit: 'g/L', normalRange: '120-160' }
+  ];
+
+  const handleQuickAddExamItem = (template: typeof commonExamItems[0]) => {
+    const newItem: ExamItem = {
+      name: template.name,
+      value: '',
+      unit: template.unit,
+      normalRange: template.normalRange,
+      status: 'normal',
+      isAbnormal: false
+    };
+    setExamItems([...examItems, newItem]);
+    console.log('[RecordFormPage] Quick add exam item:', template.name);
+  };
+
   const renderExamForm = () => (
     <View className={styles.formSection}>
       <View className={styles.formItem}>
@@ -515,14 +591,103 @@ const RecordFormPage: React.FC = () => {
           onInput={(e) => setExamHospital(e.detail.value)}
         />
       </View>
+
       <View className={styles.formItem}>
         <Text className={styles.formLabel}>
-          <Text className={styles.formIcon}>📝</Text>
+          <Text className={styles.formIcon}>�</Text>
+          体检指标
+        </Text>
+        <Text className={styles.formHint}>点击下方常用指标快速添加，或手动添加自定义指标</Text>
+        <View className={styles.quickExamItems}>
+          {commonExamItems.slice(0, 8).map((item) => (
+            <Button
+              key={item.name}
+              className={styles.quickExamItemBtn}
+              onClick={() => handleQuickAddExamItem(item)}
+            >
+              + {item.name}
+            </Button>
+          ))}
+        </View>
+        <Button className={styles.addExamItemBtn} onClick={handleAddExamItem}>
+          + 添加自定义指标
+        </Button>
+      </View>
+
+      {examItems.length > 0 && (
+        <View className={styles.examItemsList}>
+          <Text className={styles.formLabel}>已添加指标（共 {examItems.length} 项）</Text>
+          {examItems.map((item, index) => (
+            <View key={index} className={styles.examItemCard}>
+              <View className={styles.examItemHeader}>
+                <Input
+                  className={styles.examItemName}
+                  placeholder="指标名称"
+                  value={item.name}
+                  onInput={(e) => handleUpdateExamItem(index, 'name', e.detail.value)}
+                />
+                <Text
+                  className={classnames(
+                    styles.examItemStatus,
+                    item.isAbnormal && styles.abnormal
+                  )}
+                >
+                  {item.status === 'normal' && '正常'}
+                  {item.status === 'high' && '↑偏高'}
+                  {item.status === 'low' && '↓偏低'}
+                </Text>
+                <Text
+                  className={styles.removeExamItemBtn}
+                  onClick={() => handleRemoveExamItem(index)}
+                >
+                  删除
+                </Text>
+              </View>
+              <View className={styles.examItemRow}>
+                <View className={styles.examItemInputWrap}>
+                  <Text className={styles.examItemInputLabel}>结果值</Text>
+                  <Input
+                    className={styles.examItemInput}
+                    placeholder="请输入结果"
+                    value={item.value}
+                    onInput={(e) => handleUpdateExamItem(index, 'value', e.detail.value)}
+                  />
+                  <Text className={styles.examItemUnit}>{item.unit}</Text>
+                </View>
+              </View>
+              <View className={styles.examItemRow}>
+                <View className={styles.examItemInputWrap}>
+                  <Text className={styles.examItemInputLabel}>单位</Text>
+                  <Input
+                    className={styles.examItemInput}
+                    placeholder="如: mmol/L"
+                    value={item.unit}
+                    onInput={(e) => handleUpdateExamItem(index, 'unit', e.detail.value)}
+                  />
+                </View>
+                <View className={styles.examItemInputWrap}>
+                  <Text className={styles.examItemInputLabel}>参考范围</Text>
+                  <Input
+                    className={styles.examItemInput}
+                    placeholder="如: 3.9-6.1"
+                    value={item.normalRange}
+                    onInput={(e) => handleUpdateExamItem(index, 'normalRange', e.detail.value)}
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <View className={styles.formItem}>
+        <Text className={styles.formLabel}>
+          <Text className={styles.formIcon}>�📝</Text>
           体检备注
         </Text>
         <Textarea
           className={styles.formTextarea}
-          placeholder="记录体检结论、医生建议等..."
+          placeholder="记录体检结论、医生建议、注意事项等..."
           value={notes}
           onInput={(e) => setNotes(e.detail.value)}
         />

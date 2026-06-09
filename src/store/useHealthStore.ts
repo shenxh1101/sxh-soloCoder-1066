@@ -133,11 +133,34 @@ export const useHealthStore = create<HealthState>((set, get) => ({
     })),
 
   updateDailyRecord: (date: string, memberId: string, updates: Partial<DailyRecord>) =>
-    set((state) => ({
-      dailyRecords: state.dailyRecords.map((r) =>
-        r.date === date && r.memberId === memberId ? { ...r, ...updates } : r
-      )
-    })),
+    set((state) => {
+      const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
+      if (existing) {
+        return {
+          dailyRecords: state.dailyRecords.map((r) =>
+            r.date === date && r.memberId === memberId ? { ...r, ...updates } : r
+          )
+        };
+      } else {
+        const newRecord: DailyRecord = {
+          date,
+          memberId,
+          steps: 0,
+          exerciseMinutes: 0,
+          exerciseType: '',
+          waterCups: 0,
+          sleepStartTime: '',
+          sleepEndTime: '',
+          sleepHours: 0,
+          weight: 0,
+          waistLine: 0,
+          checkInItems: [],
+          notes: '',
+          ...updates
+        };
+        return { dailyRecords: [...state.dailyRecords, newRecord] };
+      }
+    }),
 
   checkIn: (date: string, memberId: string, item: string) =>
     set((state) => {

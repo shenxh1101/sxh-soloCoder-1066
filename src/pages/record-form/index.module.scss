@@ -198,6 +198,141 @@
   }
 }
 
+.formHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.quickExamItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.quickExamItemBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-md;
+  background: rgba($color-primary, 0.08);
+  border-radius: $radius-button;
+  color: $color-primary;
+  font-size: $font-size-xs;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.addExamItemBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  width: 100%;
+  background: $color-bg-hover;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-md;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.examItemsList {
+  margin-top: $spacing-md;
+}
+
+.examItemCard {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.examItemHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.examItemName {
+  flex: 1;
+  height: $button-height-md;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  border: none;
+}
+
+.examItemStatus {
+  font-size: $font-size-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-button;
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+  white-space: nowrap;
+
+  &.abnormal {
+    background: rgba($color-warning, 0.1);
+    color: $color-warning;
+  }
+}
+
+.removeExamItemBtn {
+  font-size: $font-size-xs;
+  color: $color-error;
+  padding: $spacing-xs $spacing-sm;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.examItemRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.examItemInputWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.examItemInputLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.examItemInput {
+  height: $button-height-md;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  border: none;
+}
+
+.examItemUnit {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  min-width: 60rpx;
+  text-align: right;
+}
+
 .memberInfo {
   display: flex;
   align-items: center;

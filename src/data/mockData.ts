@@ -126,14 +126,16 @@ export const mockExamRecords: ExamRecord[] = [
     memberId: '1',
     hospital: '市第一人民医院',
     items: [
-      { name: '血常规', value: '正常', normalRange: '-', isAbnormal: false },
-      { name: '肝功能', value: '正常', normalRange: '-', isAbnormal: false },
-      { name: '肾功能', value: '正常', normalRange: '-', isAbnormal: false },
-      { name: '血糖', value: '5.6', normalRange: '3.9-6.1', isAbnormal: false },
-      { name: '血脂', value: '偏高', normalRange: '-', isAbnormal: true },
-      { name: '心电图', value: '正常', normalRange: '-', isAbnormal: false }
+      { name: '收缩压', value: '118', unit: 'mmHg', normalRange: '90-140', status: 'normal', isAbnormal: false },
+      { name: '舒张压', value: '78', unit: 'mmHg', normalRange: '60-90', status: 'normal', isAbnormal: false },
+      { name: '空腹血糖', value: '5.6', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'normal', isAbnormal: false },
+      { name: '总胆固醇', value: '6.2', unit: 'mmol/L', normalRange: '2.8-5.2', status: 'high', isAbnormal: true },
+      { name: '甘油三酯', value: '2.1', unit: 'mmol/L', normalRange: '0.4-1.7', status: 'high', isAbnormal: true },
+      { name: '高密度脂蛋白', value: '1.2', unit: 'mmol/L', normalRange: '>1.0', status: 'normal', isAbnormal: false },
+      { name: '谷丙转氨酶(ALT)', value: '35', unit: 'U/L', normalRange: '0-40', status: 'normal', isAbnormal: false },
+      { name: '心率', value: '72', unit: '次/分', normalRange: '60-100', status: 'normal', isAbnormal: false }
     ],
-    notes: '血脂偏高，建议清淡饮食，增加运动'
+    notes: '血脂偏高，建议清淡饮食，增加运动，3个月后复查血脂'
   },
   {
     id: '2',
@@ -141,11 +143,14 @@ export const mockExamRecords: ExamRecord[] = [
     memberId: '2',
     hospital: '中心医院',
     items: [
-      { name: '血压', value: '145/95', normalRange: '90-140/60-90', isAbnormal: true },
-      { name: '血糖', value: '7.2', normalRange: '3.9-6.1', isAbnormal: true },
-      { name: '心电图', value: '正常', normalRange: '-', isAbnormal: false }
+      { name: '收缩压', value: '145', unit: 'mmHg', normalRange: '90-140', status: 'high', isAbnormal: true },
+      { name: '舒张压', value: '95', unit: 'mmHg', normalRange: '60-90', status: 'high', isAbnormal: true },
+      { name: '空腹血糖', value: '7.2', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'high', isAbnormal: true },
+      { name: '总胆固醇', value: '5.8', unit: 'mmol/L', normalRange: '2.8-5.2', status: 'high', isAbnormal: true },
+      { name: '心率', value: '78', unit: '次/分', normalRange: '60-100', status: 'normal', isAbnormal: false },
+      { name: '心电图', value: '窦性心律', unit: '', normalRange: '-', status: 'normal', isAbnormal: false }
     ],
-    notes: '高血压、糖尿病，定期服药'
+    notes: '高血压、糖尿病，定期服药，建议每周监测血压血糖'
   }
 ];
 
@@ -185,20 +190,22 @@ export const mockReminders: Reminder[] = [
     memberId: '2',
     type: 'medicine',
     title: '降压药',
+    medicineName: '氨氯地平片',
     time: '08:00',
     repeatDays: [0, 1, 2, 3, 4, 5, 6],
     enabled: true,
-    notes: '饭后服用'
+    notes: '饭后服用，每次1片'
   },
   {
     id: '5',
     memberId: '2',
     type: 'medicine',
     title: '降糖药',
+    medicineName: '二甲双胍',
     time: '12:00',
     repeatDays: [0, 1, 2, 3, 4, 5, 6],
     enabled: true,
-    notes: '饭前服用'
+    notes: '饭前服用，每次1片'
   },
   {
     id: '6',

@@ -227,26 +227,85 @@
   color: $color-text-secondary;
 }
 
-.examItems {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
-}
-
-.examTag {
+.examAbnormalBadge {
   font-size: $font-size-xs;
   padding: $spacing-xs $spacing-sm;
-  border-radius: $radius-sm;
+  background: rgba($color-warning, 0.1);
+  color: $color-warning;
+  border-radius: $radius-button;
+}
 
-  &.normal {
-    background: rgba($color-success, 0.1);
-    color: $color-success;
-  }
+.examItemsDetail {
+  margin-bottom: $spacing-md;
+}
 
-  &.abnormal {
-    background: rgba($color-error, 0.1);
-    color: $color-error;
+.examItemDetail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
   }
+}
+
+.examItemName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex: 1;
+}
+
+.examItemValueWrap {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.examItemValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+
+  &.abnormalValue {
+    color: $color-warning;
+  }
+}
+
+.examItemStatus {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  font-weight: $font-weight-bold;
+}
+
+.examItemRange {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-left: $spacing-md;
+  min-width: 120rpx;
+  text-align: right;
+}
+
+.examNotes {
+  background: rgba($color-info, 0.05);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-top: $spacing-sm;
+}
+
+.examNotesLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-info;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.examNotesText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
 }
 
 .otherMetrics {

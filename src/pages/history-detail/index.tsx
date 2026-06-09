@@ -289,37 +289,61 @@ const HistoryDetailPage: React.FC = () => {
           {dayExamRecords.length > 0 && (
             <>
               <Text className={styles.sectionTitle}>体检记录</Text>
-              {dayExamRecords.map((record) => (
-                <View key={record.id} className={styles.bodySection}>
-                  <View className={styles.bodyRow}>
-                    <Text className={styles.bodyLabel}>
-                      <Text className={styles.bodyIcon}>🏥</Text>
-                      体检医院
-                    </Text>
-                    <Text className={styles.bodyValue}>{record.hospital || '-'}</Text>
-                  </View>
-                  {record.items && record.items.length > 0 && record.items.map((item) => (
-                    <View key={item.name} className={styles.bodyRow}>
-                      <Text className={styles.bodyLabel}>{item.name}</Text>
-                      <Text className={styles.bodyValue}>
-                        {item.value} {item.unit}
-                        {item.status && item.status !== 'normal' && (
-                          <Text className={styles.abnormalTag}>{item.status}</Text>
+              {dayExamRecords.map((record) => {
+                const abnormalCount = record.items.filter((i) => i.isAbnormal).length;
+                return (
+                  <View key={record.id} className={styles.bodySection}>
+                    <View className={styles.bodyRow}>
+                      <Text className={styles.bodyLabel}>
+                        <Text className={styles.bodyIcon}>🏥</Text>
+                        体检医院
+                      </Text>
+                      <View style={{ display: 'flex', alignItems: 'center', gap: '8rpx' }}>
+                        <Text className={styles.bodyValue}>{record.hospital || '-'}</Text>
+                        {abnormalCount > 0 && (
+                          <Text className={styles.abnormalTag}>⚠️ {abnormalCount}项异常</Text>
                         )}
-                      </Text>
+                      </View>
                     </View>
-                  ))}
-                  {record.notes && (
-                    <View className={styles.notesSection}>
-                      <Text className={styles.notesTitle}>
-                        <Text className={styles.bodyIcon}>📝</Text>
-                        医生建议
-                      </Text>
-                      <Text className={styles.notesContent}>{record.notes}</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
+                    {record.items && record.items.length > 0 && (
+                      <View className={styles.examItemsDetail}>
+                        {record.items.map((item, idx) => (
+                          <View key={idx} className={styles.examItemDetail}>
+                            <Text className={styles.examItemName}>{item.name}</Text>
+                            <View style={{ display: 'flex', alignItems: 'center', gap: '8rpx' }}>
+                              <Text
+                                className={classnames(
+                                  styles.bodyValue,
+                                  item.isAbnormal && styles.abnormalValue
+                                )}
+                              >
+                                {item.value} {item.unit}
+                              </Text>
+                              {item.isAbnormal && (
+                                <Text className={styles.examItemStatus}>
+                                  {item.status === 'high' ? '↑' : '↓'}
+                                </Text>
+                              )}
+                            </View>
+                            {item.normalRange && item.normalRange !== '-' && (
+                              <Text className={styles.examItemRange}>参考: {item.normalRange}</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {record.notes && (
+                      <View className={styles.notesSection}>
+                        <Text className={styles.notesTitle}>
+                          <Text className={styles.bodyIcon}>�</Text>
+                          医生建议
+                        </Text>
+                        <Text className={styles.notesContent}>{record.notes}</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </>
           )}
         </>

@@ -323,6 +323,231 @@
   }
 }
 
+.querySubtitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  margin-top: $spacing-md;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.queryMemberSelector {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+}
+
+.queryMemberBtn {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  height: $button-height-md;
+  padding: 0 $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  white-space: nowrap;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: #fff;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.queryMemberAvatar {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: $font-weight-semibold;
+}
+
+.queryMemberName {
+  font-size: $font-size-sm;
+}
+
+.dateRangeTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.dateRangeTab {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: #fff;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.queryDateInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.queryDateText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.queryDateHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.queryResults {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.queryResultsHeader {
+  margin-bottom: $spacing-lg;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.queryResultsTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.queryResultsSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.querySummary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.querySummaryItem {
+  text-align: center;
+  padding: $spacing-md $spacing-xs;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.querySummaryValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.querySummaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.dailyDetailList {
+  margin-top: $spacing-md;
+}
+
+.dailyDetailItem {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.dailyDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.dailyDetailDate {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.dailyDetailCheckin {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.checkinDot {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  opacity: 0.3;
+  transition: all $transition-base;
+
+  &.completed {
+    opacity: 1;
+  }
+}
+
+.dailyDetailStats {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.dailyStat {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.dailyStatIcon {
+  font-size: 24rpx;
+}
+
+.dailyStatValue {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
 .emptyState {
   text-align: center;
   padding: $spacing-xl * 2;

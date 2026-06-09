@@ -209,29 +209,55 @@ const BodyPage: React.FC = () => {
         {examRecords.length === 0 ? (
           <View className={styles.emptyState}>暂无体检记录</View>
         ) : (
-          examRecords.map((record) => (
-            <View key={record.id} className={styles.examItem}>
-              <View className={styles.examHeader}>
-                <View>
-                  <Text className={styles.examDate}>{record.date}</Text>
-                  <Text className={styles.examHospital}>{record.hospital}</Text>
+          examRecords.map((record) => {
+            const abnormalCount = record.items.filter((i) => i.isAbnormal).length;
+            return (
+              <View key={record.id} className={styles.examItem}>
+                <View className={styles.examHeader}>
+                  <View>
+                    <Text className={styles.examDate}>{record.date}</Text>
+                    <Text className={styles.examHospital}>{record.hospital}</Text>
+                  </View>
+                  {abnormalCount > 0 && (
+                    <Text className={styles.examAbnormalBadge}>
+                      ⚠️ {abnormalCount}项异常
+                    </Text>
+                  )}
                 </View>
+                <View className={styles.examItemsDetail}>
+                  {record.items.map((item, idx) => (
+                    <View key={idx} className={styles.examItemDetail}>
+                      <Text className={styles.examItemName}>{item.name}</Text>
+                      <View className={styles.examItemValueWrap}>
+                        <Text
+                          className={classnames(
+                            styles.examItemValue,
+                            item.isAbnormal && styles.abnormalValue
+                          )}
+                        >
+                          {item.value} {item.unit}
+                        </Text>
+                        {item.isAbnormal && (
+                          <Text className={styles.examItemStatus}>
+                            {item.status === 'high' ? '↑' : '↓'}
+                          </Text>
+                        )}
+                      </View>
+                      {item.normalRange && item.normalRange !== '-' && (
+                        <Text className={styles.examItemRange}>参考: {item.normalRange}</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+                {record.notes && (
+                  <View className={styles.examNotes}>
+                    <Text className={styles.examNotesLabel}>💡 医生建议:</Text>
+                    <Text className={styles.examNotesText}>{record.notes}</Text>
+                  </View>
+                )}
               </View>
-              <View className={styles.examItems}>
-                {record.items.slice(0, 4).map((item, idx) => (
-                  <Text
-                    key={idx}
-                    className={`${styles.examTag} ${item.isAbnormal ? styles.abnormal : styles.normal}`}
-                  >
-                    {item.name}
-                  </Text>
-                ))}
-              </View>
-              {record.notes && (
-                <Text className={styles.historyNotes}>备注：{record.notes}</Text>
-              )}
-            </View>
-          ))
+            );
+          })
         )}
       </View>
 

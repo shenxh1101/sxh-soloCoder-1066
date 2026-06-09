@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Button } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import { View, Text, ScrollView, Button, Input, Textarea } from '@tarojs/components';
+import Taro, { useDidShow } from '@tarojs/taro';
 import dayjs from 'dayjs';
 import classnames from 'classnames';
 import styles from './index.module.scss';
@@ -23,13 +23,25 @@ const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '�
 const RemindersPage: React.FC = () => {
   const currentMemberId = useHealthStore((state) => state.currentMemberId);
   const getReminders = useHealthStore((state) => state.getReminders);
+  const addReminder = useHealthStore((state) => state.addReminder);
   const toggleReminder = useHealthStore((state) => state.toggleReminder);
   const deleteReminder = useHealthStore((state) => state.deleteReminder);
 
   const [activeType, setActiveType] = useState<ReminderType>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addType, setAddType] = useState<Reminder['type']>('medicine');
+  const [newTitle, setNewTitle] = useState('');
+  const [newMedicineName, setNewMedicineName] = useState('');
+  const [newTime, setNewTime] = useState('08:00');
+  const [newRepeatDays, setNewRepeatDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
+  const [newNotes, setNewNotes] = useState('');
 
   const reminders = getReminders(currentMemberId);
+
+  useDidShow(() => {
+    console.log('[RemindersPage] Page showed, memberId:', currentMemberId, 'reminders count:', reminders.length);
+  });
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -46,7 +58,13 @@ const RemindersPage: React.FC = () => {
         const types: Reminder['type'][] = ['medicine', 'water', 'exercise', 'sleep', 'exam'];
         const type = types[res.tapIndex];
         console.log('[RemindersPage] Add reminder type:', type);
-        Taro.showToast({ title: '功能开发中', icon: 'none' });
+        setAddType(type);
+        setNewTitle(typeConfig[type].label + '提醒');
+        setNewMedicineName('');
+        setNewTime(type === 'medicine' ? '08:00' : type === 'sleep' ? '22:30' : '09:00');
+        setNewRepeatDays(type === 'exam' ? [] : [0, 1, 2, 3, 4, 5, 6]);
+        setNewNotes('');
+        setShowAddModal(true);
       }
     });
   };
@@ -90,8 +108,43 @@ const RemindersPage: React.FC = () => {
       notes: ''
     };
 
+    addReminder(newReminder);
     Taro.showToast({ title: '已添加提醒', icon: 'success' });
     console.log('[RemindersPage] Quick add reminder:', newReminder);
+  };
+
+  const handleToggleRepeatDay = (day: number) => {
+    setNewRepeatDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleSaveReminder = () => {
+    if (!newTitle.trim()) {
+      Taro.showToast({ title: '请输入提醒标题', icon: 'none' });
+      return;
+    }
+    if (!newTime) {
+      Taro.showToast({ title: '请选择提醒时间', icon: 'none' });
+      return;
+    }
+
+    const newReminder: Reminder = {
+      id: Date.now().toString(),
+      memberId: currentMemberId,
+      type: addType,
+      title: newTitle.trim(),
+      medicineName: addType === 'medicine' ? newMedicineName.trim() || undefined : undefined,
+      time: newTime,
+      repeatDays: [...newRepeatDays],
+      enabled: true,
+      notes: newNotes.trim()
+    };
+
+    addReminder(newReminder);
+    console.log('[RemindersPage] Save reminder:', newReminder);
+    Taro.showToast({ title: '添加成功', icon: 'success' });
+    setShowAddModal(false);
   };
 
   const filteredReminders = useMemo(() => {
@@ -200,15 +253,26 @@ const RemindersPage: React.FC = () => {
                       {getRepeatText(reminder.repeatDays)}
                     </Text>
                   </View>
+                  {reminder.medicineName && (
+                    <Text className={styles.reminderMedicine}>💊 {reminder.medicineName}</Text>
+                  )}
                   {reminder.notes && (
                     <Text className={styles.reminderNotes}>{reminder.notes}</Text>
                   )}
                 </View>
-                <View
-                  className={classnames(styles.switch, reminder.enabled && styles.active)}
-                  onClick={() => handleToggle(reminder.id)}
-                >
-                  <View className={styles.switchHandle} />
+                <View className={styles.reminderActions}>
+                  <View
+                    className={classnames(styles.switch, reminder.enabled && styles.active)}
+                    onClick={() => handleToggle(reminder.id)}
+                  >
+                    <View className={styles.switchHandle} />
+                  </View>
+                  <Text
+                    className={styles.deleteBtn}
+                    onClick={() => handleDelete(reminder.id, reminder.title)}
+                  >
+                    删除
+                  </Text>
                 </View>
               </View>
             );
@@ -216,7 +280,7 @@ const RemindersPage: React.FC = () => {
         </View>
       )}
 
-      {sortedReminders.length > 0 && (
+      {sortedReminders.filter((r) => r.type === 'medicine').length > 0 && (
         <>
           <Text className={styles.sectionTitle}>用药提醒</Text>
           <View className={styles.reminderList}>
@@ -248,21 +312,115 @@ const RemindersPage: React.FC = () => {
                           {getRepeatText(reminder.repeatDays)}
                         </Text>
                       </View>
+                      {reminder.medicineName && (
+                        <Text className={styles.reminderMedicine}>💊 {reminder.medicineName}</Text>
+                      )}
                       {reminder.notes && (
                         <Text className={styles.reminderNotes}>{reminder.notes}</Text>
                       )}
                     </View>
-                    <View
-                      className={classnames(styles.switch, reminder.enabled && styles.active)}
-                      onClick={() => handleToggle(reminder.id)}
-                    >
-                      <View className={styles.switchHandle} />
+                    <View className={styles.reminderActions}>
+                      <View
+                        className={classnames(styles.switch, reminder.enabled && styles.active)}
+                        onClick={() => handleToggle(reminder.id)}
+                      >
+                        <View className={styles.switchHandle} />
+                      </View>
+                      <Text
+                        className={styles.deleteBtn}
+                        onClick={() => handleDelete(reminder.id, reminder.title)}
+                      >
+                        删除
+                      </Text>
                     </View>
                   </View>
                 );
               })}
           </View>
         </>
+      )}
+
+      {showAddModal && (
+        <View className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
+          <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <Text className={styles.modalTitle}>添加{typeConfig[addType].label}提醒</Text>
+            <View className={styles.modalForm}>
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>提醒标题</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="请输入提醒标题"
+                  value={newTitle}
+                  onInput={(e) => setNewTitle(e.detail.value)}
+                  maxlength={20}
+                />
+              </View>
+              {addType === 'medicine' && (
+                <View className={styles.formItem}>
+                  <Text className={styles.formLabel}>药品名称</Text>
+                  <Input
+                    className={styles.formInput}
+                    placeholder="请输入药品名称（可选）"
+                    value={newMedicineName}
+                    onInput={(e) => setNewMedicineName(e.detail.value)}
+                    maxlength={30}
+                  />
+                </View>
+              )}
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>提醒时间</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="例如：08:00"
+                  value={newTime}
+                  onInput={(e) => setNewTime(e.detail.value)}
+                />
+              </View>
+              {addType !== 'exam' && (
+                <View className={styles.formItem}>
+                  <Text className={styles.formLabel}>重复日期</Text>
+                  <View className={styles.weekDaySelect}>
+                    {weekDays.map((day, index) => (
+                      <Button
+                        key={index}
+                        className={classnames(
+                          styles.weekDayBtn,
+                          newRepeatDays.includes(index) && styles.active
+                        )}
+                        onClick={() => handleToggleRepeatDay(index)}
+                      >
+                        {day}
+                      </Button>
+                    ))}
+                  </View>
+                </View>
+              )}
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>备注</Text>
+                <Textarea
+                  className={styles.formTextarea}
+                  placeholder="可选：填写剂量、注意事项等..."
+                  value={newNotes}
+                  onInput={(e) => setNewNotes(e.detail.value)}
+                />
+              </View>
+            </View>
+            <View className={styles.modalButtons}>
+              <Button
+                className={classnames(styles.modalBtn, styles.cancel)}
+                onClick={() => setShowAddModal(false)}
+              >
+                取消
+              </Button>
+              <Button
+                className={classnames(styles.modalBtn, styles.confirm)}
+                onClick={handleSaveReminder}
+              >
+                保存
+              </Button>
+            </View>
+          </View>
+        </View>
       )}
     </ScrollView>
   );

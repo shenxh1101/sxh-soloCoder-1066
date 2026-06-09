@@ -278,6 +278,47 @@
   line-height: 1.6;
 }
 
+.examItemsDetail {
+  margin-top: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.examItemDetail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.examItemName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex: 1;
+}
+
+.abnormalValue {
+  color: $color-warning !important;
+}
+
+.examItemStatus {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  font-weight: $font-weight-bold;
+}
+
+.examItemRange {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-left: $spacing-md;
+  min-width: 120rpx;
+  text-align: right;
+}
+
 .noData {
   text-align: center;
   padding: $spacing-xxl 0;

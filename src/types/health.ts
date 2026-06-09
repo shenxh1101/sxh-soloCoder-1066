@@ -72,6 +72,7 @@ export interface Reminder {
   memberId: string;
   type: 'medicine' | 'water' | 'exercise' | 'sleep' | 'exam';
   title: string;
+  medicineName?: string;
   time: string;
   repeatDays: number[];
   enabled: boolean;

@@ -1,30 +1,40 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Button } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import { View, Text, ScrollView, Button, Input } from '@tarojs/components';
+import Taro, { useDidShow } from '@tarojs/taro';
 import dayjs from 'dayjs';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import MemberSelector from '@/components/MemberSelector';
 import DataChart from '@/components/DataChart';
 import { useHealthStore } from '@/store/useHealthStore';
-import { getTrendColor } from '@/utils/healthUtils';
-import type { WeeklyReport } from '@/types/health';
+import { getTrendColor, calculateSleepHours } from '@/utils/healthUtils';
+import type { WeeklyReport, DailyRecord, BodyRecord } from '@/types/health';
 
 const ReportsPage: React.FC = () => {
   const currentMemberId = useHealthStore((state) => state.currentMemberId);
   const getWeeklyReports = useHealthStore((state) => state.getWeeklyReports);
   const getDailyRecords = useHealthStore((state) => state.getDailyRecords);
   const getCheckInStreak = useHealthStore((state) => state.getCheckInStreak);
+  const getMember = useHealthStore((state) => state.getMember);
+  const getBodyRecords = useHealthStore((state) => state.getBodyRecords);
+  const members = useHealthStore((state) => state.members);
 
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [showQueryResults, setShowQueryResults] = useState(false);
+  const [queryDays, setQueryDays] = useState<7 | 30 | 90>(7);
+  const [queryMemberId, setQueryMemberId] = useState(currentMemberId);
   const [queryStartDate, setQueryStartDate] = useState(dayjs().subtract(7, 'day').format('YYYY-MM-DD'));
   const [queryEndDate, setQueryEndDate] = useState(dayjs().format('YYYY-MM-DD'));
 
   const weeklyReports = getWeeklyReports(currentMemberId);
-  const streak = getCheckInStreak(currentMemberId);
-
   const currentReport: WeeklyReport | undefined = weeklyReports[currentWeekIndex];
+  const queryMember = getMember(queryMemberId);
+
+  useDidShow(() => {
+    console.log('[ReportsPage] Page showed, memberId:', currentMemberId);
+    setQueryMemberId(currentMemberId);
+  });
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -34,45 +44,77 @@ const ReportsPage: React.FC = () => {
     }, 1000);
   }, []);
 
-  const handleSelectDate = (field: 'start' | 'end') => {
-    Taro.showActionSheet({
-      itemList: ['最近7天', '最近30天', '最近90天', '自定义'],
-      success: (res) => {
-        const today = dayjs();
-        let startDate = queryStartDate;
-        let endDate = queryEndDate;
-
-        switch (res.tapIndex) {
-          case 0:
-            startDate = today.subtract(7, 'day').format('YYYY-MM-DD');
-            endDate = today.format('YYYY-MM-DD');
-            break;
-          case 1:
-            startDate = today.subtract(30, 'day').format('YYYY-MM-DD');
-            endDate = today.format('YYYY-MM-DD');
-            break;
-          case 2:
-            startDate = today.subtract(90, 'day').format('YYYY-MM-DD');
-            endDate = today.format('YYYY-MM-DD');
-            break;
-          default:
-            Taro.showToast({ title: '请在历史记录中选择', icon: 'none' });
-            return;
-        }
-
-        if (field === 'start') setQueryStartDate(startDate);
-        else setQueryEndDate(endDate);
-
-        console.log('[ReportsPage] Date range:', startDate, endDate);
-      }
-    });
+  const handleSelectDateRange = (days: 7 | 30 | 90) => {
+    const today = dayjs();
+    const startDate = today.subtract(days - 1, 'day').format('YYYY-MM-DD');
+    const endDate = today.format('YYYY-MM-DD');
+    setQueryDays(days);
+    setQueryStartDate(startDate);
+    setQueryEndDate(endDate);
+    console.log('[ReportsPage] Select date range:', days, 'days, from', startDate, 'to', endDate);
   };
 
-  const handleQuery = () => {
-    Taro.navigateTo({
-      url: `/pages/history-detail/index?startDate=${queryStartDate}&endDate=${queryEndDate}`
+  const handleQueryMemberChange = (memberId: string) => {
+    setQueryMemberId(memberId);
+    console.log('[ReportsPage] Query member changed to:', memberId);
+  };
+
+  const queryResults = useMemo(() => {
+    const records = getDailyRecords(queryMemberId, queryStartDate, queryEndDate);
+    const bodyRecords = getBodyRecords(queryMemberId);
+    
+    const dayStats = records.sort((a, b) => a.date.localeCompare(b.date)).map((record: DailyRecord) => {
+      const bodyRecord = bodyRecords.find((b: BodyRecord) => b.date === record.date);
+      const sleepHours = record.sleepStartTime && record.sleepEndTime
+        ? calculateSleepHours(record.sleepStartTime, record.sleepEndTime)
+        : record.sleepHours;
+      
+      return {
+        date: record.date,
+        displayDate: dayjs(record.date).format('M/D'),
+        weekday: dayjs(record.date).format('dd'),
+        steps: record.steps,
+        waterCups: record.waterCups,
+        sleepHours: sleepHours,
+        weight: bodyRecord?.weight || null,
+        hasWeight: !!bodyRecord,
+        checkInCount: record.checkInItems?.length || 0,
+        checkInItems: record.checkInItems || []
+      };
     });
-    console.log('[ReportsPage] Query history:', queryStartDate, queryEndDate);
+
+    const summary = {
+      totalDays: dayStats.length,
+      avgSteps: dayStats.length > 0 ? Math.round(dayStats.reduce((sum, d) => sum + d.steps, 0) / dayStats.length) : 0,
+      totalWater: dayStats.reduce((sum, d) => sum + d.waterCups, 0),
+      avgWater: dayStats.length > 0 ? (dayStats.reduce((sum, d) => sum + d.waterCups, 0) / dayStats.length).toFixed(1) : '0',
+      avgSleep: dayStats.length > 0 ? (dayStats.reduce((sum, d) => sum + d.sleepHours, 0) / dayStats.length).toFixed(1) : '0',
+      weightRecords: dayStats.filter(d => d.hasWeight).length,
+      avgWeight: dayStats.filter(d => d.hasWeight).length > 0
+        ? (dayStats.filter(d => d.hasWeight).reduce((sum, d) => sum + (d.weight || 0), 0) / dayStats.filter(d => d.hasWeight).length).toFixed(1)
+        : '0',
+      perfectDays: dayStats.filter(d => d.checkInCount >= 4).length
+    };
+
+    const chartData = dayStats.map(d => ({
+      label: d.displayDate,
+      value: d.steps / 1000,
+      target: 8
+    }));
+
+    return { dayStats, summary, chartData };
+  }, [getDailyRecords, getBodyRecords, queryMemberId, queryStartDate, queryEndDate]);
+
+  const handleQuery = () => {
+    setShowQueryResults(true);
+    console.log('[ReportsPage] Show query results for:', queryDays, 'days, member:', queryMemberId);
+  };
+
+  const handleViewDayDetail = (date: string) => {
+    Taro.navigateTo({
+      url: `/pages/history-detail/index?date=${date}&memberId=${queryMemberId}`
+    });
+    console.log('[ReportsPage] View day detail:', date, 'member:', queryMemberId);
   };
 
   const handleExport = () => {
@@ -242,24 +284,143 @@ const ReportsPage: React.FC = () => {
 
       <Text className={styles.sectionTitle}>历史数据查询</Text>
       <View className={styles.querySection}>
-        <View className={styles.queryRow}>
-          <View className={styles.queryItem}>
-            <Text className={styles.queryLabel}>开始日期</Text>
-            <Button className={styles.queryValue} onClick={() => handleSelectDate('start')}>
-              {queryStartDate}
+        <Text className={styles.querySubtitle}>选择成员</Text>
+        <View className={styles.queryMemberSelector}>
+          {members.map((member) => (
+            <Button
+              key={member.id}
+              className={classnames(styles.queryMemberBtn, queryMemberId === member.id && styles.active)}
+              onClick={() => handleQueryMemberChange(member.id)}
+            >
+              <Text className={styles.queryMemberAvatar}>{member.name.charAt(0)}</Text>
+              <Text className={styles.queryMemberName}>{member.name}</Text>
             </Button>
-          </View>
-          <View className={styles.queryItem}>
-            <Text className={styles.queryLabel}>结束日期</Text>
-            <Button className={styles.queryValue} onClick={() => handleSelectDate('end')}>
-              {queryEndDate}
-            </Button>
-          </View>
+          ))}
         </View>
+
+        <Text className={styles.querySubtitle}>选择时间范围</Text>
+        <View className={styles.dateRangeTabs}>
+          {[7, 30, 90].map((days) => (
+            <Button
+              key={days}
+              className={classnames(styles.dateRangeTab, queryDays === days && styles.active)}
+              onClick={() => handleSelectDateRange(days as 7 | 30 | 90)}
+            >
+              最近{days}天
+            </Button>
+          ))}
+        </View>
+
+        <View className={styles.queryDateInfo}>
+          <Text className={styles.queryDateText}>
+            {queryStartDate} 至 {queryEndDate}
+          </Text>
+          <Text className={styles.queryDateHint}>共 {queryResults.summary.totalDays} 天数据</Text>
+        </View>
+
         <Button className={styles.queryBtn} onClick={handleQuery}>
-          查询历史记录
+          {showQueryResults ? '刷新查询结果' : '查询历史记录'}
         </Button>
       </View>
+
+      {showQueryResults && (
+        <View className={styles.queryResults}>
+          <View className={styles.queryResultsHeader}>
+            <Text className={styles.queryResultsTitle}>
+              {queryMember?.name} · 最近{queryDays}天数据
+            </Text>
+            <Text className={styles.queryResultsSubtitle}>
+              {queryStartDate} ~ {queryEndDate}
+            </Text>
+          </View>
+
+          <View className={styles.querySummary}>
+            <View className={styles.querySummaryItem}>
+              <Text className={styles.querySummaryValue}>{(queryResults.summary.avgSteps / 1000).toFixed(1)}k</Text>
+              <Text className={styles.querySummaryLabel}>日均步数</Text>
+            </View>
+            <View className={styles.querySummaryItem}>
+              <Text className={styles.querySummaryValue}>{queryResults.summary.avgWater}</Text>
+              <Text className={styles.querySummaryLabel}>日均饮水(杯)</Text>
+            </View>
+            <View className={styles.querySummaryItem}>
+              <Text className={styles.querySummaryValue}>{queryResults.summary.avgSleep}h</Text>
+              <Text className={styles.querySummaryLabel}>日均睡眠</Text>
+            </View>
+            <View className={styles.querySummaryItem}>
+              <Text className={styles.querySummaryValue}>{queryResults.summary.perfectDays}</Text>
+              <Text className={styles.querySummaryLabel}>全勤天数</Text>
+            </View>
+          </View>
+
+          <DataChart
+            title={`最近${queryDays}天步数趋势`}
+            data={queryResults.chartData.slice(-Math.min(queryDays, 14))}
+            color="#22c55e"
+            showTargetLine
+          />
+
+          <Text className={styles.sectionSubtitle}>每日详情</Text>
+          <View className={styles.dailyDetailList}>
+            {queryResults.dayStats.slice().reverse().map((day) => (
+              <View
+                key={day.date}
+                className={styles.dailyDetailItem}
+                onClick={() => handleViewDayDetail(day.date)}
+              >
+                <View className={styles.dailyDetailHeader}>
+                  <Text className={styles.dailyDetailDate}>
+                    {day.displayDate} {day.weekday}
+                  </Text>
+                  <View className={styles.dailyDetailCheckin}>
+                    {['steps', 'water', 'exercise', 'sleep'].map((type) => (
+                      <Text
+                        key={type}
+                        className={classnames(
+                          styles.checkinDot,
+                          day.checkInItems.includes(type) && styles.completed
+                        )}
+                      >
+                        {type === 'steps' && '👟'}
+                        {type === 'water' && '💧'}
+                        {type === 'exercise' && '🏃'}
+                        {type === 'sleep' && '😴'}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+                <View className={styles.dailyDetailStats}>
+                  <View className={styles.dailyStat}>
+                    <Text className={styles.dailyStatIcon}>👟</Text>
+                    <Text className={styles.dailyStatValue}>{day.steps.toLocaleString()} 步</Text>
+                  </View>
+                  <View className={styles.dailyStat}>
+                    <Text className={styles.dailyStatIcon}>💧</Text>
+                    <Text className={styles.dailyStatValue}>{day.waterCups} 杯</Text>
+                  </View>
+                  <View className={styles.dailyStat}>
+                    <Text className={styles.dailyStatIcon}>😴</Text>
+                    <Text className={styles.dailyStatValue}>{day.sleepHours}h</Text>
+                  </View>
+                  {day.hasWeight && day.weight && (
+                    <View className={styles.dailyStat}>
+                      <Text className={styles.dailyStatIcon}>⚖️</Text>
+                      <Text className={styles.dailyStatValue}>{day.weight}kg</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {queryResults.dayStats.length === 0 && (
+            <View className={styles.emptyState}>
+              <Text className={styles.emptyIcon}>📭</Text>
+              <Text className={styles.emptyText}>该时间段暂无数据</Text>
+            </View>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 };
