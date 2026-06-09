@@ -1,0 +1,99 @@
+@use '@/styles/variables.scss' as *;
+
+.progressBar {
+  width: 100%;
+  margin-bottom: $spacing-md;
+
+  &.small {
+    .header {
+      margin-bottom: $spacing-xs;
+    }
+    .label {
+      font-size: $font-size-sm;
+    }
+    .value {
+      font-size: $font-size-sm;
+    }
+    .barContainer {
+      height: 8rpx;
+    }
+  }
+
+  &.medium {
+    .header {
+      margin-bottom: $spacing-sm;
+    }
+    .barContainer {
+      height: 12rpx;
+    }
+  }
+
+  &.large {
+    .header {
+      margin-bottom: $spacing-md;
+    }
+    .label {
+      font-size: $font-size-lg;
+    }
+    .value {
+      font-size: $font-size-xl;
+    }
+    .barContainer {
+      height: 16rpx;
+    }
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.values {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-xs;
+}
+
+.value {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.separator {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.target {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.percent {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  margin-left: $spacing-sm;
+}
+
+.barContainer {
+  width: 100%;
+  background-color: $color-divider;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: $radius-round;
+  transition: width $transition-base ease;
+}

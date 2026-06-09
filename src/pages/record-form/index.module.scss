@@ -1,0 +1,263 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding: 0 $page-padding;
+  padding-bottom: 120rpx;
+}
+
+.typeTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.typeTab {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  white-space: nowrap;
+  display: inline-flex;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: #fff;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.formSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.formLabel {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.formIcon {
+  font-size: 32rpx;
+}
+
+.formInput {
+  width: 100%;
+  height: $button-height-lg;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: 0 $spacing-lg;
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  border: none;
+}
+
+.formInputRow {
+  display: flex;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.formInputWithUnit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: 0 $spacing-lg;
+  height: $button-height-lg;
+}
+
+.formInputInline {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+}
+
+.formUnit {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 160rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: none;
+}
+
+.quickValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.quickValueBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.exerciseTypes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-top: $spacing-sm;
+}
+
+.exerciseTypeBtn {
+  @include button-reset;
+  flex-direction: column;
+  padding: $spacing-md $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, rgba($color-primary, 0.1) 0%, rgba($color-primary-light, 0.1) 100%);
+    border: 2rpx solid $color-primary;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.exerciseTypeIcon {
+  font-size: 36rpx;
+  margin-bottom: $spacing-xs;
+}
+
+.exerciseTypeName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.timeInputRow {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.timeInputItem {
+  flex: 1;
+}
+
+.saveBtn {
+  @include button-reset;
+  height: $button-height-lg;
+  width: 100%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: #fff;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+  margin-top: $spacing-xl;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.memberAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-xl;
+  color: #fff;
+  font-weight: $font-weight-semibold;
+}
+
+.memberDetails {
+  flex: 1;
+}
+
+.memberName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.memberDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.tipCard {
+  background: rgba($color-info, 0.05);
+  border: 2rpx solid rgba($color-info, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.tipTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-info;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.tipContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}

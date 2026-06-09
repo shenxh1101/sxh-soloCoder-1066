@@ -1,0 +1,104 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  white-space: nowrap;
+  padding: $spacing-md 0;
+  margin: 0 (-$page-padding);
+  padding-left: $page-padding;
+}
+
+.memberItem {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: $spacing-lg;
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+
+  &.active {
+    background: rgba($color-primary, 0.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.avatarWrap {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary-light 0%, $color-primary 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-sm;
+  border: 4rpx solid transparent;
+
+  .active & {
+    border-color: $color-primary;
+    box-shadow: 0 4rpx 12rpx rgba($color-primary, 0.3);
+  }
+}
+
+.avatar {
+  font-size: $font-size-xl;
+  color: #fff;
+  font-weight: $font-weight-semibold;
+}
+
+.activeBadge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24rpx;
+  height: 24rpx;
+  background: $color-primary;
+  border: 3rpx solid #fff;
+  border-radius: $radius-round;
+}
+
+.name {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: 2rpx;
+}
+
+.relation {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.addButton {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: $page-padding;
+  padding: $spacing-sm;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.addIcon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $radius-round;
+  border: 3rpx dashed $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+  background: $color-bg-card;
+}
+
+.addText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

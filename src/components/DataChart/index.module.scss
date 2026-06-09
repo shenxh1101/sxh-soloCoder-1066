@@ -1,0 +1,70 @@
+@use '@/styles/variables.scss' as *;
+
+.chartContainer {
+  width: 100%;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 300rpx;
+  padding-top: $spacing-lg;
+}
+
+.barGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 80rpx;
+}
+
+.bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 200rpx;
+  width: 100%;
+}
+
+.bar {
+  width: 32rpx;
+  border-radius: $radius-sm $radius-sm 0 0;
+  transition: height $transition-base ease;
+  min-height: 4rpx;
+}
+
+.targetLine {
+  position: absolute;
+  left: -8rpx;
+  right: -8rpx;
+  height: 2rpx;
+  background: $color-error;
+  z-index: 1;
+}
+
+.valueLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-top: $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.xLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
