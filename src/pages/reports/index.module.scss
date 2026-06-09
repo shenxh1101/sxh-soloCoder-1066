@@ -586,3 +586,236 @@
 .emptyText {
   font-size: $font-size-md;
 }
+
+.reportTypeTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  background: $color-bg-card;
+  padding: $spacing-xs;
+  border-radius: $radius-button;
+  box-shadow: $shadow-card;
+}
+
+.reportTypeTab {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  background: transparent;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: #fff;
+    box-shadow: 0 4rpx 12rpx rgba($color-primary, 0.3);
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.monthSelector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-lg;
+  padding: $spacing-md 0;
+  margin-bottom: $spacing-lg;
+}
+
+.monthNavBtn {
+  @include button-reset;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  background: $color-bg-card;
+  font-size: $font-size-lg;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+
+  &:disabled {
+    opacity: 0.4;
+  }
+
+  &:active:not(:disabled) {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}
+
+.monthLabel {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.monthlyReportCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.monthlyStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.monthlyStatItem {
+  text-align: center;
+  padding: $spacing-md $spacing-xs;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.monthlyStatValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin-bottom: $spacing-xs;
+
+  &.danger {
+    color: $color-error;
+  }
+}
+
+.monthlyStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.streakSummary {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba($color-primary, 0.05) 0%, rgba($color-primary-light, 0.05) 100%);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+}
+
+.streakSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.streakSummaryIcon {
+  font-size: 48rpx;
+}
+
+.streakSummaryValue {
+  display: block;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.2;
+}
+
+.streakSummaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.abnormalSummary {
+  margin-top: $spacing-lg;
+  padding: $spacing-lg;
+  background: rgba($color-error, 0.05);
+  border-radius: $radius-md;
+}
+
+.abnormalItemList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.abnormalItemTag {
+  padding: $spacing-xs $spacing-md;
+  background: rgba($color-error, 0.1);
+  color: $color-error;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.perfectBadge {
+  padding: 4rpx 12rpx;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.monthlyDayList {
+  margin-top: $spacing-md;
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+.monthlyDayItem {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  transition: all $transition-base;
+
+  &.noRecord {
+    opacity: 0.6;
+    background: rgba($color-bg-secondary, 0.5);
+    cursor: default;
+
+    &:active {
+      opacity: 0.6;
+    }
+  }
+
+  &:active:not(.noRecord) {
+    transform: scale(0.98);
+  }
+}
+
+.monthlyDayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.monthlyDayDate {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.monthlyDayCheckin {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-sm;
+}
+
+.monthlyDayStats {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.monthlyDayStat {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.monthlyDayAbnormal {
+  font-size: $font-size-sm;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+}

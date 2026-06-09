@@ -25,7 +25,7 @@
 
 .memberCard {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: $spacing-md;
   background: $color-bg-card;
   border-radius: $radius-lg;
@@ -33,6 +33,7 @@
   box-shadow: $shadow-card;
   position: relative;
   transition: all $transition-base;
+  cursor: pointer;
 
   &.active {
     border: 2rpx solid $color-primary;
@@ -42,6 +43,16 @@
   &:active {
     transform: scale(0.98);
   }
+}
+
+.memberHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+}
+
+.memberBasic {
+  flex: 1;
 }
 
 .activeBadge {
@@ -110,20 +121,80 @@
   gap: $spacing-xs;
 }
 
-.memberActions {
+.weekOverview {
+  background: rgba($color-bg-secondary, 0.5);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.weekTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.weekStats {
+  display: flex;
+  justify-content: space-between;
+  gap: $spacing-sm;
+}
+
+.weekStatItem {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.weekStatIcon {
+  font-size: $font-size-lg;
+}
+
+.weekStatValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+
+  &.weightUp {
+    color: $color-warning;
+  }
+
+  &.weightDown {
+    color: $color-success;
+  }
+
+  &.abnormal {
+    color: $color-error;
+  }
+}
+
+.weekStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.memberActions {
+  display: flex;
   gap: $spacing-sm;
+  flex-wrap: wrap;
 }
 
 .actionBtn {
   @include button-reset;
   height: $button-height-sm;
-  padding: 0 $spacing-lg;
+  padding: 0 $spacing-md;
   background: $color-bg-hover;
   border-radius: $radius-button;
   color: $color-text-secondary;
   font-size: $font-size-xs;
+
+  &.info {
+    background: linear-gradient(135deg, $color-info 0%, #60a5fa 100%);
+    color: #fff;
+  }
 
   &.primary {
     background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);

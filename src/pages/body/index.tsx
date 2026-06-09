@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Button } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import dayjs from 'dayjs';

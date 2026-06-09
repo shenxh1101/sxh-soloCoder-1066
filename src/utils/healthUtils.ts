@@ -59,7 +59,12 @@ export const calculateStreak = (recordsOrDates: any[]): { current: number; longe
 
   const dates = recordsOrDates.map((item) => {
     if (typeof item === 'string') return item;
-    if (item && item.date) return item.date;
+    if (item && item.date) {
+      const checkInItems = item.checkInItems || [];
+      if (checkInItems.length > 0) {
+        return item.date;
+      }
+    }
     return null;
   }).filter(Boolean) as string[];
 
