@@ -494,7 +494,8 @@ const RecordFormPage: React.FC = () => {
       unit: '',
       normalRange: '',
       status: 'normal',
-      isAbnormal: false
+      isAbnormal: false,
+      notes: ''
     };
     setExamItems([...examItems, newItem]);
     console.log('[RecordFormPage] Add exam item');
@@ -557,7 +558,8 @@ const RecordFormPage: React.FC = () => {
       unit: template.unit,
       normalRange: template.normalRange,
       status: 'normal',
-      isAbnormal: false
+      isAbnormal: false,
+      notes: ''
     };
     setExamItems([...examItems, newItem]);
     console.log('[RecordFormPage] Quick add exam item:', template.name);
@@ -675,6 +677,17 @@ const RecordFormPage: React.FC = () => {
                   />
                 </View>
               </View>
+              <View className={styles.examItemRow}>
+                <View className={styles.examItemInputWrap} style={{ flex: 1 }}>
+                  <Text className={styles.examItemInputLabel}>备注</Text>
+                  <Input
+                    className={styles.examItemInput}
+                    placeholder="可选：标注测量条件、特殊说明等"
+                    value={item.notes || ''}
+                    onInput={(e) => handleUpdateExamItem(index, 'notes', e.detail.value)}
+                  />
+                </View>
+              </View>
             </View>
           ))}
         </View>
@@ -682,7 +695,7 @@ const RecordFormPage: React.FC = () => {
 
       <View className={styles.formItem}>
         <Text className={styles.formLabel}>
-          <Text className={styles.formIcon}>�📝</Text>
+          <Text className={styles.formIcon}>��</Text>
           体检备注
         </Text>
         <Textarea

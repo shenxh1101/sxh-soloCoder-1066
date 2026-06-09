@@ -36,11 +36,15 @@ const RemindersPage: React.FC = () => {
   const [newTime, setNewTime] = useState('08:00');
   const [newRepeatDays, setNewRepeatDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
   const [newNotes, setNewNotes] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const reminders = getReminders(currentMemberId);
+  const reminders = useMemo(() => {
+    return getReminders(currentMemberId);
+  }, [currentMemberId, refreshKey, getReminders]);
 
   useDidShow(() => {
-    console.log('[RemindersPage] Page showed, memberId:', currentMemberId, 'reminders count:', reminders.length);
+    setRefreshKey((k) => k + 1);
+    console.log('[RemindersPage] Page showed, refresh data, memberId:', currentMemberId);
   });
 
   const handleRefresh = useCallback(() => {

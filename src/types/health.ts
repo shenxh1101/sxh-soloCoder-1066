@@ -65,6 +65,7 @@ export interface ExamItem {
   normalRange: string;
   status: 'normal' | 'high' | 'low';
   isAbnormal: boolean;
+  notes?: string;
 }
 
 export interface Reminder {

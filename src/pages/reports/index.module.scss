@@ -415,10 +415,34 @@
   border-radius: $radius-md;
 }
 
-.queryDateText {
+.dailyStatValue {
   font-size: $font-size-sm;
   color: $color-text-primary;
   font-weight: $font-weight-medium;
+}
+
+.noRecord {
+  opacity: 0.6;
+  background: rgba($color-bg-secondary, 0.5);
+  cursor: default;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.noRecordText {
+  color: $color-text-tertiary;
+}
+
+.emptyDay {
+  padding: $spacing-sm 0;
+  text-align: center;
+}
+
+.emptyDayText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
 }
 
 .queryDateHint {

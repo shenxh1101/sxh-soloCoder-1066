@@ -126,11 +126,11 @@ export const mockExamRecords: ExamRecord[] = [
     memberId: '1',
     hospital: '市第一人民医院',
     items: [
-      { name: '收缩压', value: '118', unit: 'mmHg', normalRange: '90-140', status: 'normal', isAbnormal: false },
+      { name: '收缩压', value: '118', unit: 'mmHg', normalRange: '90-140', status: 'normal', isAbnormal: false, notes: '晨起安静状态下测量' },
       { name: '舒张压', value: '78', unit: 'mmHg', normalRange: '60-90', status: 'normal', isAbnormal: false },
-      { name: '空腹血糖', value: '5.6', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'normal', isAbnormal: false },
-      { name: '总胆固醇', value: '6.2', unit: 'mmol/L', normalRange: '2.8-5.2', status: 'high', isAbnormal: true },
-      { name: '甘油三酯', value: '2.1', unit: 'mmol/L', normalRange: '0.4-1.7', status: 'high', isAbnormal: true },
+      { name: '空腹血糖', value: '5.6', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'normal', isAbnormal: false, notes: '空腹12小时' },
+      { name: '总胆固醇', value: '6.2', unit: 'mmol/L', normalRange: '2.8-5.2', status: 'high', isAbnormal: true, notes: '偏高，建议减少动物脂肪摄入' },
+      { name: '甘油三酯', value: '2.1', unit: 'mmol/L', normalRange: '0.4-1.7', status: 'high', isAbnormal: true, notes: '近期饮食偏油腻' },
       { name: '高密度脂蛋白', value: '1.2', unit: 'mmol/L', normalRange: '>1.0', status: 'normal', isAbnormal: false },
       { name: '谷丙转氨酶(ALT)', value: '35', unit: 'U/L', normalRange: '0-40', status: 'normal', isAbnormal: false },
       { name: '心率', value: '72', unit: '次/分', normalRange: '60-100', status: 'normal', isAbnormal: false }
@@ -143,12 +143,12 @@ export const mockExamRecords: ExamRecord[] = [
     memberId: '2',
     hospital: '中心医院',
     items: [
-      { name: '收缩压', value: '145', unit: 'mmHg', normalRange: '90-140', status: 'high', isAbnormal: true },
+      { name: '收缩压', value: '145', unit: 'mmHg', normalRange: '90-140', status: 'high', isAbnormal: true, notes: '已服用降压药' },
       { name: '舒张压', value: '95', unit: 'mmHg', normalRange: '60-90', status: 'high', isAbnormal: true },
-      { name: '空腹血糖', value: '7.2', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'high', isAbnormal: true },
+      { name: '空腹血糖', value: '7.2', unit: 'mmol/L', normalRange: '3.9-6.1', status: 'high', isAbnormal: true, notes: '糖尿病史5年，需加强监测' },
       { name: '总胆固醇', value: '5.8', unit: 'mmol/L', normalRange: '2.8-5.2', status: 'high', isAbnormal: true },
       { name: '心率', value: '78', unit: '次/分', normalRange: '60-100', status: 'normal', isAbnormal: false },
-      { name: '心电图', value: '窦性心律', unit: '', normalRange: '-', status: 'normal', isAbnormal: false }
+      { name: '心电图', value: '窦性心律', unit: '', normalRange: '-', status: 'normal', isAbnormal: false, notes: '正常心电图' }
     ],
     notes: '高血压、糖尿病，定期服药，建议每周监测血压血糖'
   }

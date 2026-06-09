@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import Taro from '@tarojs/taro';
 import type { Member, DailyRecord, BodyRecord, ExamRecord, Reminder, WeeklyReport, HealthTarget } from '@/types/health';
 import {
   mockMembers,
@@ -10,6 +11,62 @@ import {
   mockWeeklyReports
 } from '@/data/mockData';
 import { calculateStreak, calculateBMI } from '@/utils/healthUtils';
+
+const STORAGE_KEY = 'health_store_data';
+
+interface PersistedState {
+  currentMemberId: string;
+  members: Member[];
+  targets: Record<string, HealthTarget>;
+  dailyRecords: DailyRecord[];
+  bodyRecords: BodyRecord[];
+  examRecords: ExamRecord[];
+  reminders: Reminder[];
+  weeklyReports: WeeklyReport[];
+}
+
+const loadFromStorage = (): Partial<PersistedState> => {
+  try {
+    const data = Taro.getStorageSync(STORAGE_KEY);
+    if (data) {
+      console.log('[Store] Loaded from storage');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn('[Store] Failed to load from storage:', e);
+  }
+  return {};
+};
+
+const saveToStorage = (state: PersistedState) => {
+  try {
+    const dataToSave: PersistedState = {
+      currentMemberId: state.currentMemberId,
+      members: state.members,
+      targets: state.targets,
+      dailyRecords: state.dailyRecords,
+      bodyRecords: state.bodyRecords,
+      examRecords: state.examRecords,
+      reminders: state.reminders,
+      weeklyReports: state.weeklyReports
+    };
+    Taro.setStorageSync(STORAGE_KEY, JSON.stringify(dataToSave));
+    console.log('[Store] Saved to storage');
+  } catch (e) {
+    console.warn('[Store] Failed to save to storage:', e);
+  }
+};
+
+const createPersistMiddleware = (config) => (set, get, api) => {
+  return config(
+    (partial) => {
+      set(partial);
+      saveToStorage(get() as PersistedState);
+    },
+    get,
+    api
+  );
+};
 
 interface HealthState {
   currentMemberId: string;
@@ -62,293 +119,295 @@ interface HealthState {
   deleteMember: (memberId: string) => void;
 }
 
-export const useHealthStore = create<HealthState>((set, get) => ({
-  currentMemberId: '1',
-  members: mockMembers,
-  targets: {
-    '1': { ...mockDefaultTarget },
-    '2': { ...mockDefaultTarget, weight: 70, waistLine: 85 },
-    '3': { ...mockDefaultTarget, weight: 55, waistLine: 70, steps: 6000 }
-  },
-  dailyRecords: mockDailyRecords,
-  bodyRecords: mockBodyRecords,
-  examRecords: mockExamRecords,
-  reminders: mockReminders,
-  weeklyReports: mockWeeklyReports,
+const getInitialState = (): PersistedState => {
+  const persisted = loadFromStorage();
+  return {
+    currentMemberId: persisted.currentMemberId || '1',
+    members: persisted.members || mockMembers,
+    targets: persisted.targets || {
+      '1': { ...mockDefaultTarget },
+      '2': { ...mockDefaultTarget, weight: 70, waistLine: 85 },
+      '3': { ...mockDefaultTarget, weight: 55, waistLine: 70, steps: 6000 }
+    },
+    dailyRecords: persisted.dailyRecords || mockDailyRecords,
+    bodyRecords: persisted.bodyRecords || mockBodyRecords,
+    examRecords: persisted.examRecords || mockExamRecords,
+    reminders: persisted.reminders || mockReminders,
+    weeklyReports: persisted.weeklyReports || mockWeeklyReports
+  };
+};
 
-  setCurrentMember: (memberId: string) => set({ currentMemberId: memberId }),
-
-  addMember: (member: Member) =>
-    set((state) => ({
-      members: [...state.members, member],
-      targets: { ...state.targets, [member.id]: { ...mockDefaultTarget } }
-    })),
-
-  updateMember: (member: Member) =>
-    set((state) => ({
-      members: state.members.map((m) => (m.id === member.id ? member : m))
-    })),
-
-  removeMember: (memberId: string) =>
-    set((state) => ({
-      members: state.members.filter((m) => m.id !== memberId),
-      currentMemberId: state.currentMemberId === memberId ? state.members[0]?.id || '' : state.currentMemberId
-    })),
-
-  getCurrentMember: () => {
-    const state = get();
-    return state.members.find((m) => m.id === state.currentMemberId);
-  },
-
-  getTarget: (memberId: string) => {
-    const state = get();
-    return state.targets[memberId] || { ...mockDefaultTarget };
-  },
-
-  setTarget: (memberId: string, target: Partial<HealthTarget>) =>
-    set((state) => ({
-      targets: {
-        ...state.targets,
-        [memberId]: { ...state.targets[memberId], ...target }
-      }
-    })),
-
-  getTodayRecord: (memberId: string) => {
-    const state = get();
-    const today = new Date().toISOString().split('T')[0];
-    return state.dailyRecords.find((r) => r.date === today && r.memberId === memberId);
-  },
-
-  getDailyRecords: (memberId: string, startDate?: string, endDate?: string) => {
-    const state = get();
-    let records = state.dailyRecords.filter((r) => r.memberId === memberId);
-    if (startDate) records = records.filter((r) => r.date >= startDate);
-    if (endDate) records = records.filter((r) => r.date <= endDate);
-    return records.sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  addDailyRecord: (record: DailyRecord) =>
-    set((state) => ({
-      dailyRecords: [...state.dailyRecords, record]
-    })),
-
-  updateDailyRecord: (date: string, memberId: string, updates: Partial<DailyRecord>) =>
-    set((state) => {
-      const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
-      if (existing) {
-        return {
-          dailyRecords: state.dailyRecords.map((r) =>
-            r.date === date && r.memberId === memberId ? { ...r, ...updates } : r
-          )
-        };
-      } else {
-        const newRecord: DailyRecord = {
-          date,
-          memberId,
-          steps: 0,
-          exerciseMinutes: 0,
-          exerciseType: '',
-          waterCups: 0,
-          sleepStartTime: '',
-          sleepEndTime: '',
-          sleepHours: 0,
-          weight: 0,
-          waistLine: 0,
-          checkInItems: [],
-          notes: '',
-          ...updates
-        };
-        return { dailyRecords: [...state.dailyRecords, newRecord] };
-      }
-    }),
-
-  checkIn: (date: string, memberId: string, item: string) =>
-    set((state) => {
-      const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
-      if (existing) {
-        const newCheckInItems = existing.checkInItems.includes(item)
-          ? existing.checkInItems
-          : [...existing.checkInItems, item];
-        return {
-          dailyRecords: state.dailyRecords.map((r) =>
-            r.date === date && r.memberId === memberId ? { ...r, checkInItems: newCheckInItems } : r
-          )
-        };
-      } else {
-        const newRecord: DailyRecord = {
-          date,
-          memberId,
-          steps: 0,
-          exerciseMinutes: 0,
-          exerciseType: '',
-          waterCups: 0,
-          sleepStartTime: '',
-          sleepEndTime: '',
-          sleepHours: 0,
-          weight: 0,
-          waistLine: 0,
-          checkInItems: [item],
-          notes: ''
-        };
-        return { dailyRecords: [...state.dailyRecords, newRecord] };
-      }
-    }),
-
-  addWaterCup: (date: string, memberId: string) =>
-    set((state) => {
-      const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
-      if (existing) {
-        return {
-          dailyRecords: state.dailyRecords.map((r) =>
-            r.date === date && r.memberId === memberId
-              ? { ...r, waterCups: r.waterCups + 1, checkInItems: [...new Set([...r.checkInItems, 'water'])] }
-              : r
-          )
-        };
-      } else {
-        const newRecord: DailyRecord = {
-          date,
-          memberId,
-          steps: 0,
-          exerciseMinutes: 0,
-          exerciseType: '',
-          waterCups: 1,
-          sleepStartTime: '',
-          sleepEndTime: '',
-          sleepHours: 0,
-          weight: 0,
-          waistLine: 0,
-          checkInItems: ['water'],
-          notes: ''
-        };
-        return { dailyRecords: [...state.dailyRecords, newRecord] };
-      }
-    }),
-
-  getBodyRecords: (memberId: string) => {
-    const state = get();
-    return state.bodyRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  addBodyRecord: (record: BodyRecord) =>
-    set((state) => {
-      const member = state.members.find((m) => m.id === record.memberId);
-      const bmi = member ? calculateBMI(record.weight, member.height) : undefined;
-      return {
-        bodyRecords: [...state.bodyRecords, { ...record, bmi }]
-      };
-    }),
-
-  getLatestBodyRecord: (memberId: string) => {
-    const state = get();
-    return state.bodyRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date))[0];
-  },
-
-  getExamRecords: (memberId: string) => {
-    const state = get();
-    return state.examRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  addExamRecord: (record: ExamRecord) =>
-    set((state) => ({
-      examRecords: [...state.examRecords, record]
-    })),
-
-  getReminders: (memberId: string) => {
-    const state = get();
-    return state.reminders.filter((r) => r.memberId === memberId);
-  },
-
-  addReminder: (reminder: Reminder) =>
-    set((state) => ({
-      reminders: [...state.reminders, reminder]
-    })),
-
-  updateReminder: (id: string, updates: Partial<Reminder>) =>
-    set((state) => ({
-      reminders: state.reminders.map((r) => (r.id === id ? { ...r, ...updates } : r))
-    })),
-
-  toggleReminder: (id: string) =>
-    set((state) => ({
-      reminders: state.reminders.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r))
-    })),
-
-  deleteReminder: (id: string) =>
-    set((state) => ({
-      reminders: state.reminders.filter((r) => r.id !== id)
-    })),
-
-  getWeeklyReports: (memberId: string) => {
-    const state = get();
-    return state.weeklyReports
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
-  },
-
-  getCheckInStreak: (memberId: string) => {
-    const state = get();
-    const records = state.dailyRecords
-      .filter((r) => r.memberId === memberId && r.checkInItems.length > 0)
-      .map((r) => r.date);
-    const current = calculateStreak(records);
+export const useHealthStore = create<HealthState>()(
+  createPersistMiddleware((set, get) => {
+    const initialState = getInitialState();
     return {
-      current,
-      longest: Math.max(current, 7),
-      totalDays: records.length
+      ...initialState,
+
+      setCurrentMember: (memberId: string) => set({ currentMemberId: memberId }),
+
+      addMember: (member: Member) =>
+        set((state) => ({
+          members: [...state.members, member],
+          targets: { ...state.targets, [member.id]: { ...mockDefaultTarget } }
+        })),
+
+      updateMember: (member: Member) =>
+        set((state) => ({
+          members: state.members.map((m) => (m.id === member.id ? member : m))
+        })),
+
+      removeMember: (memberId: string) =>
+        set((state) => ({
+          members: state.members.filter((m) => m.id !== memberId),
+          currentMemberId: state.currentMemberId === memberId ? state.members[0]?.id || '' : state.currentMemberId
+        })),
+
+      deleteMember: (memberId: string) =>
+        set((state) => ({
+          members: state.members.filter((m) => m.id !== memberId),
+          currentMemberId: state.currentMemberId === memberId ? state.members[0]?.id || '' : state.currentMemberId,
+          dailyRecords: state.dailyRecords.filter((r) => r.memberId !== memberId),
+          bodyRecords: state.bodyRecords.filter((r) => r.memberId !== memberId),
+          examRecords: state.examRecords.filter((r) => r.memberId !== memberId),
+          reminders: state.reminders.filter((r) => r.memberId !== memberId)
+        })),
+
+      getCurrentMember: () => {
+        const state = get();
+        return state.members.find((m) => m.id === state.currentMemberId);
+      },
+
+      getMember: (memberId: string) => {
+        const state = get();
+        return state.members.find((m) => m.id === memberId);
+      },
+
+      getTarget: (memberId: string) => {
+        const state = get();
+        return state.targets[memberId] || { ...mockDefaultTarget };
+      },
+
+      setTarget: (memberId: string, target: Partial<HealthTarget>) =>
+        set((state) => ({
+          targets: {
+            ...state.targets,
+            [memberId]: { ...state.targets[memberId], ...target }
+          }
+        })),
+
+      getTodayRecord: (memberId: string) => {
+        const state = get();
+        const today = new Date().toISOString().split('T')[0];
+        return state.dailyRecords.find((r) => r.date === today && r.memberId === memberId);
+      },
+
+      getDailyRecordByDate: (date: string, memberId: string) => {
+        const state = get();
+        return state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
+      },
+
+      getDailyRecords: (memberId: string, startDate?: string, endDate?: string) => {
+        const state = get();
+        let records = state.dailyRecords.filter((r) => r.memberId === memberId);
+        if (startDate) records = records.filter((r) => r.date >= startDate);
+        if (endDate) records = records.filter((r) => r.date <= endDate);
+        return records.sort((a, b) => b.date.localeCompare(a.date));
+      },
+
+      getDailyRecordsByMember: (memberId: string) => {
+        const state = get();
+        return state.dailyRecords.filter((r) => r.memberId === memberId);
+      },
+
+      addDailyRecord: (record: DailyRecord) =>
+        set((state) => ({
+          dailyRecords: [...state.dailyRecords, record]
+        })),
+
+      updateDailyRecord: (date: string, memberId: string, updates: Partial<DailyRecord>) =>
+        set((state) => {
+          const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
+          if (existing) {
+            return {
+              dailyRecords: state.dailyRecords.map((r) =>
+                r.date === date && r.memberId === memberId ? { ...r, ...updates } : r
+              )
+            };
+          } else {
+            const newRecord: DailyRecord = {
+              date,
+              memberId,
+              steps: 0,
+              exerciseMinutes: 0,
+              exerciseType: '',
+              waterCups: 0,
+              sleepStartTime: '',
+              sleepEndTime: '',
+              sleepHours: 0,
+              weight: 0,
+              waistLine: 0,
+              checkInItems: [],
+              notes: '',
+              ...updates
+            };
+            return { dailyRecords: [...state.dailyRecords, newRecord] };
+          }
+        }),
+
+      checkIn: (date: string, memberId: string, item: string) =>
+        set((state) => {
+          const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
+          if (existing) {
+            const newCheckInItems = existing.checkInItems.includes(item)
+              ? existing.checkInItems
+              : [...existing.checkInItems, item];
+            return {
+              dailyRecords: state.dailyRecords.map((r) =>
+                r.date === date && r.memberId === memberId ? { ...r, checkInItems: newCheckInItems } : r
+              )
+            };
+          } else {
+            const newRecord: DailyRecord = {
+              date,
+              memberId,
+              steps: 0,
+              exerciseMinutes: 0,
+              exerciseType: '',
+              waterCups: 0,
+              sleepStartTime: '',
+              sleepEndTime: '',
+              sleepHours: 0,
+              weight: 0,
+              waistLine: 0,
+              checkInItems: [item],
+              notes: ''
+            };
+            return { dailyRecords: [...state.dailyRecords, newRecord] };
+          }
+        }),
+
+      addWaterCup: (date: string, memberId: string) =>
+        set((state) => {
+          const existing = state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
+          if (existing) {
+            return {
+              dailyRecords: state.dailyRecords.map((r) =>
+                r.date === date && r.memberId === memberId ? { ...r, waterCups: r.waterCups + 1 } : r
+              )
+            };
+          } else {
+            const newRecord: DailyRecord = {
+              date,
+              memberId,
+              steps: 0,
+              exerciseMinutes: 0,
+              exerciseType: '',
+              waterCups: 1,
+              sleepStartTime: '',
+              sleepEndTime: '',
+              sleepHours: 0,
+              weight: 0,
+              waistLine: 0,
+              checkInItems: [],
+              notes: ''
+            };
+            return { dailyRecords: [...state.dailyRecords, newRecord] };
+          }
+        }),
+
+      getBodyRecords: (memberId: string) => {
+        const state = get();
+        return state.bodyRecords
+          .filter((r) => r.memberId === memberId)
+          .sort((a, b) => b.date.localeCompare(a.date));
+      },
+
+      getBodyRecordsByMember: (memberId: string) => {
+        const state = get();
+        return state.bodyRecords.filter((r) => r.memberId === memberId);
+      },
+
+      addBodyRecord: (record: BodyRecord) =>
+        set((state) => {
+          const bmi = record.weight && record.height
+            ? calculateBMI(record.weight, record.height)
+            : undefined;
+          const newRecord = bmi ? { ...record, bmi } : record;
+          return { bodyRecords: [...state.bodyRecords, newRecord] };
+        }),
+
+      getLatestBodyRecord: (memberId: string) => {
+        const state = get();
+        const records = state.bodyRecords
+          .filter((r) => r.memberId === memberId)
+          .sort((a, b) => b.date.localeCompare(a.date));
+        return records[0];
+      },
+
+      getExamRecords: (memberId: string) => {
+        const state = get();
+        return state.examRecords
+          .filter((r) => r.memberId === memberId)
+          .sort((a, b) => b.date.localeCompare(a.date));
+      },
+
+      getExamRecordsByMember: (memberId: string) => {
+        const state = get();
+        return state.examRecords.filter((r) => r.memberId === memberId);
+      },
+
+      addExamRecord: (record: ExamRecord) =>
+        set((state) => ({
+          examRecords: [...state.examRecords, record]
+        })),
+
+      getReminders: (memberId: string) => {
+        const state = get();
+        return state.reminders.filter((r) => r.memberId === memberId);
+      },
+
+      addReminder: (reminder: Reminder) =>
+        set((state) => ({
+          reminders: [...state.reminders, reminder]
+        })),
+
+      updateReminder: (id: string, updates: Partial<Reminder>) =>
+        set((state) => ({
+          reminders: state.reminders.map((r) =>
+            r.id === id ? { ...r, ...updates } : r
+          )
+        })),
+
+      toggleReminder: (id: string) =>
+        set((state) => ({
+          reminders: state.reminders.map((r) =>
+            r.id === id ? { ...r, enabled: !r.enabled } : r
+          )
+        })),
+
+      deleteReminder: (id: string) =>
+        set((state) => ({
+          reminders: state.reminders.filter((r) => r.id !== id)
+        })),
+
+      getWeeklyReports: (memberId: string) => {
+        const state = get();
+        return state.weeklyReports.filter((r) => r.memberId === memberId);
+      },
+
+      getCheckInStreak: (memberId: string) => {
+        const state = get();
+        const records = state.dailyRecords
+          .filter((r) => r.memberId === memberId && r.checkInItems && r.checkInItems.length > 0)
+          .map((r) => r.date)
+          .sort((a, b) => b.localeCompare(a));
+        return calculateStreak(records);
+      },
+
+      getAbnormalRecords: (memberId: string) => {
+        const state = get();
+        return state.bodyRecords.filter((r) => r.memberId === memberId && r.isAbnormal);
+      }
     };
-  },
-
-  getAbnormalRecords: (memberId: string) => {
-    const state = get();
-    return state.bodyRecords
-      .filter((r) => r.memberId === memberId && r.isAbnormal)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  getMember: (memberId: string) => {
-    const state = get();
-    return state.members.find((m) => m.id === memberId);
-  },
-
-  getDailyRecordsByMember: (memberId: string) => {
-    const state = get();
-    return state.dailyRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  getBodyRecordsByMember: (memberId: string) => {
-    const state = get();
-    return state.bodyRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  getExamRecordsByMember: (memberId: string) => {
-    const state = get();
-    return state.examRecords
-      .filter((r) => r.memberId === memberId)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-
-  getDailyRecordByDate: (date: string, memberId: string) => {
-    const state = get();
-    return state.dailyRecords.find((r) => r.date === date && r.memberId === memberId);
-  },
-
-  deleteMember: (memberId: string) =>
-    set((state) => ({
-      members: state.members.filter((m) => m.id !== memberId),
-      currentMemberId: state.currentMemberId === memberId ? state.members[0]?.id || '' : state.currentMemberId,
-      dailyRecords: state.dailyRecords.filter((r) => r.memberId !== memberId),
-      bodyRecords: state.bodyRecords.filter((r) => r.memberId !== memberId),
-      examRecords: state.examRecords.filter((r) => r.memberId !== memberId)
-    }))
-}));
+  })
+);

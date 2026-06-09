@@ -319,6 +319,13 @@
   text-align: right;
 }
 
+.examItemNotes {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
 .noData {
   text-align: center;
   padding: $spacing-xxl 0;

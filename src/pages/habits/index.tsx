@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Button } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import dayjs from 'dayjs';
 import styles from './index.module.scss';
 import MemberSelector from '@/components/MemberSelector';
@@ -20,20 +20,29 @@ const HabitsPage: React.FC = () => {
 
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const target = getTarget(currentMemberId);
-  const todayRecord = getTodayRecord(currentMemberId) || {
-    steps: 0,
-    exerciseMinutes: 0,
-    waterCups: 0,
-    sleepHours: 0,
-    checkInItems: [],
-    exerciseType: ''
-  };
-  const streak = getCheckInStreak(currentMemberId);
-  const allRecords = getDailyRecords(currentMemberId);
+  useDidShow(() => {
+    setRefreshKey((k) => k + 1);
+    console.log('[HabitsPage] Page showed, refresh data');
+  });
 
   const today = dayjs().format('YYYY-MM-DD');
+
+  const { target, todayRecord, streak, allRecords } = useMemo(() => {
+    const t = getTarget(currentMemberId);
+    const tr = getTodayRecord(currentMemberId) || {
+      steps: 0,
+      exerciseMinutes: 0,
+      waterCups: 0,
+      sleepHours: 0,
+      checkInItems: [],
+      exerciseType: ''
+    };
+    const s = getCheckInStreak(currentMemberId);
+    const ar = getDailyRecords(currentMemberId);
+    return { target: t, todayRecord: tr, streak: s, allRecords: ar };
+  }, [currentMemberId, refreshKey, getTarget, getTodayRecord, getCheckInStreak, getDailyRecords]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);

@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, Button } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import dayjs from 'dayjs';
+import classnames from 'classnames';
 import styles from './index.module.scss';
 import MemberSelector from '@/components/MemberSelector';
 import DataChart from '@/components/DataChart';
@@ -18,18 +19,24 @@ const BodyPage: React.FC = () => {
   const getDailyRecords = useHealthStore((state) => state.getDailyRecords);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const currentMember = getCurrentMember();
-  const latestRecord = getLatestBodyRecord(currentMemberId);
-  const bodyRecords = getBodyRecords(currentMemberId).slice(0, 5);
-  const examRecords = getExamRecords(currentMemberId).slice(0, 3);
-  const abnormalRecords = getAbnormalRecords(currentMemberId);
-  const dailyRecords = getDailyRecords(currentMemberId, dayjs().subtract(7, 'day').format('YYYY-MM-DD'));
+  useDidShow(() => {
+    setRefreshKey((k) => k + 1);
+    console.log('[BodyPage] Page showed, refresh data');
+  });
 
-  const bmi = latestRecord && currentMember?.height
-    ? calculateBMI(latestRecord.weight, currentMember.height)
-    : 0;
-  const bmiStatus = getBMIStatus(bmi);
+  const { currentMember, latestRecord, bodyRecords, examRecords, abnormalRecords, dailyRecords, bmi, bmiStatus } = useMemo(() => {
+    const cm = getCurrentMember();
+    const lr = getLatestBodyRecord(currentMemberId);
+    const br = getBodyRecords(currentMemberId).slice(0, 5);
+    const er = getExamRecords(currentMemberId).slice(0, 3);
+    const ar = getAbnormalRecords(currentMemberId);
+    const dr = getDailyRecords(currentMemberId, dayjs().subtract(7, 'day').format('YYYY-MM-DD'));
+    const b = lr && cm?.height ? calculateBMI(lr.weight, cm.height) : 0;
+    const bs = getBMIStatus(b);
+    return { currentMember: cm, latestRecord: lr, bodyRecords: br, examRecords: er, abnormalRecords: ar, dailyRecords: dr, bmi: b, bmiStatus: bs };
+  }, [currentMemberId, refreshKey, getCurrentMember, getLatestBodyRecord, getBodyRecords, getExamRecords, getAbnormalRecords, getDailyRecords]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -210,13 +217,14 @@ const BodyPage: React.FC = () => {
           <View className={styles.emptyState}>暂无体检记录</View>
         ) : (
           examRecords.map((record) => {
-            const abnormalCount = record.items.filter((i) => i.isAbnormal).length;
+            const items = record.items || [];
+            const abnormalCount = items.filter((i) => i && i.isAbnormal).length;
             return (
               <View key={record.id} className={styles.examItem}>
                 <View className={styles.examHeader}>
                   <View>
-                    <Text className={styles.examDate}>{record.date}</Text>
-                    <Text className={styles.examHospital}>{record.hospital}</Text>
+                    <Text className={styles.examDate}>{record.date || '-'}</Text>
+                    <Text className={styles.examHospital}>{record.hospital || '-'}</Text>
                   </View>
                   {abnormalCount > 0 && (
                     <Text className={styles.examAbnormalBadge}>
@@ -224,31 +232,43 @@ const BodyPage: React.FC = () => {
                     </Text>
                   )}
                 </View>
-                <View className={styles.examItemsDetail}>
-                  {record.items.map((item, idx) => (
-                    <View key={idx} className={styles.examItemDetail}>
-                      <Text className={styles.examItemName}>{item.name}</Text>
-                      <View className={styles.examItemValueWrap}>
-                        <Text
-                          className={classnames(
-                            styles.examItemValue,
-                            item.isAbnormal && styles.abnormalValue
-                          )}
-                        >
-                          {item.value} {item.unit}
-                        </Text>
-                        {item.isAbnormal && (
-                          <Text className={styles.examItemStatus}>
-                            {item.status === 'high' ? '↑' : '↓'}
-                          </Text>
-                        )}
-                      </View>
-                      {item.normalRange && item.normalRange !== '-' && (
-                        <Text className={styles.examItemRange}>参考: {item.normalRange}</Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
+                {items.length > 0 && (
+                  <View className={styles.examItemsDetail}>
+                    {items.map((item, idx) => {
+                      if (!item) return null;
+                      return (
+                        <View key={idx} className={styles.examItemDetail}>
+                          <View style={{ flex: 1 }}>
+                            <View style={{ display: 'flex', alignItems: 'center', gap: '8rpx', marginBottom: '4rpx' }}>
+                              <Text className={styles.examItemName}>{item.name || '-'}</Text>
+                              <View className={styles.examItemValueWrap}>
+                                <Text
+                                  className={classnames(
+                                    styles.examItemValue,
+                                    item.isAbnormal && styles.abnormalValue
+                                  )}
+                                >
+                                  {item.value || '-'} {item.unit || ''}
+                                </Text>
+                                {item.isAbnormal && (
+                                  <Text className={styles.examItemStatus}>
+                                    {item.status === 'high' ? '↑' : item.status === 'low' ? '↓' : ''}
+                                  </Text>
+                                )}
+                              </View>
+                              {item.normalRange && item.normalRange !== '-' && (
+                                <Text className={styles.examItemRange}>参考: {item.normalRange}</Text>
+                              )}
+                            </View>
+                            {item.notes && (
+                              <Text className={styles.examItemNotes}>💬 {item.notes}</Text>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
                 {record.notes && (
                   <View className={styles.examNotes}>
                     <Text className={styles.examNotesLabel}>💡 医生建议:</Text>

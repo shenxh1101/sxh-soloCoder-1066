@@ -63,37 +63,64 @@ const ReportsPage: React.FC = () => {
     const records = getDailyRecords(queryMemberId, queryStartDate, queryEndDate);
     const bodyRecords = getBodyRecords(queryMemberId);
     
-    const dayStats = records.sort((a, b) => a.date.localeCompare(b.date)).map((record: DailyRecord) => {
-      const bodyRecord = bodyRecords.find((b: BodyRecord) => b.date === record.date);
-      const sleepHours = record.sleepStartTime && record.sleepEndTime
-        ? calculateSleepHours(record.sleepStartTime, record.sleepEndTime)
-        : record.sleepHours;
+    const start = dayjs(queryStartDate);
+    const end = dayjs(queryEndDate);
+    const totalDays = end.diff(start, 'day') + 1;
+    
+    const dayStats = [];
+    for (let i = 0; i < totalDays; i++) {
+      const date = start.add(i, 'day').format('YYYY-MM-DD');
+      const record = records.find((r: DailyRecord) => r.date === date);
+      const bodyRecord = bodyRecords.find((b: BodyRecord) => b.date === date);
       
-      return {
-        date: record.date,
-        displayDate: dayjs(record.date).format('M/D'),
-        weekday: dayjs(record.date).format('dd'),
-        steps: record.steps,
-        waterCups: record.waterCups,
-        sleepHours: sleepHours,
-        weight: bodyRecord?.weight || null,
-        hasWeight: !!bodyRecord,
-        checkInCount: record.checkInItems?.length || 0,
-        checkInItems: record.checkInItems || []
-      };
-    });
+      if (record) {
+        const sleepHours = record.sleepStartTime && record.sleepEndTime
+          ? calculateSleepHours(record.sleepStartTime, record.sleepEndTime)
+          : record.sleepHours;
+        
+        dayStats.push({
+          date: record.date,
+          displayDate: dayjs(record.date).format('M/D'),
+          weekday: dayjs(record.date).format('dd'),
+          steps: record.steps,
+          waterCups: record.waterCups,
+          sleepHours: sleepHours,
+          weight: bodyRecord?.weight || null,
+          hasWeight: !!bodyRecord,
+          hasRecord: true,
+          checkInCount: record.checkInItems?.length || 0,
+          checkInItems: record.checkInItems || []
+        });
+      } else {
+        dayStats.push({
+          date,
+          displayDate: dayjs(date).format('M/D'),
+          weekday: dayjs(date).format('dd'),
+          steps: 0,
+          waterCups: 0,
+          sleepHours: 0,
+          weight: null,
+          hasWeight: false,
+          hasRecord: false,
+          checkInCount: 0,
+          checkInItems: []
+        });
+      }
+    }
 
+    const daysWithRecord = dayStats.filter(d => d.hasRecord);
     const summary = {
       totalDays: dayStats.length,
-      avgSteps: dayStats.length > 0 ? Math.round(dayStats.reduce((sum, d) => sum + d.steps, 0) / dayStats.length) : 0,
+      avgSteps: daysWithRecord.length > 0 ? Math.round(daysWithRecord.reduce((sum, d) => sum + d.steps, 0) / daysWithRecord.length) : 0,
       totalWater: dayStats.reduce((sum, d) => sum + d.waterCups, 0),
-      avgWater: dayStats.length > 0 ? (dayStats.reduce((sum, d) => sum + d.waterCups, 0) / dayStats.length).toFixed(1) : '0',
-      avgSleep: dayStats.length > 0 ? (dayStats.reduce((sum, d) => sum + d.sleepHours, 0) / dayStats.length).toFixed(1) : '0',
+      avgWater: daysWithRecord.length > 0 ? (daysWithRecord.reduce((sum, d) => sum + d.waterCups, 0) / daysWithRecord.length).toFixed(1) : '0',
+      avgSleep: daysWithRecord.length > 0 ? (daysWithRecord.reduce((sum, d) => sum + d.sleepHours, 0) / daysWithRecord.length).toFixed(1) : '0',
       weightRecords: dayStats.filter(d => d.hasWeight).length,
       avgWeight: dayStats.filter(d => d.hasWeight).length > 0
         ? (dayStats.filter(d => d.hasWeight).reduce((sum, d) => sum + (d.weight || 0), 0) / dayStats.filter(d => d.hasWeight).length).toFixed(1)
         : '0',
-      perfectDays: dayStats.filter(d => d.checkInCount >= 4).length
+      perfectDays: dayStats.filter(d => d.checkInCount >= 4).length,
+      recordDays: daysWithRecord.length
     };
 
     const chartData = dayStats.map(d => ({
@@ -365,60 +392,68 @@ const ReportsPage: React.FC = () => {
             {queryResults.dayStats.slice().reverse().map((day) => (
               <View
                 key={day.date}
-                className={styles.dailyDetailItem}
-                onClick={() => handleViewDayDetail(day.date)}
+                className={classnames(
+                  styles.dailyDetailItem,
+                  !day.hasRecord && styles.noRecord
+                )}
+                onClick={() => day.hasRecord && handleViewDayDetail(day.date)}
               >
                 <View className={styles.dailyDetailHeader}>
-                  <Text className={styles.dailyDetailDate}>
+                  <Text className={classnames(
+                    styles.dailyDetailDate,
+                    !day.hasRecord && styles.noRecordText
+                  )}>
                     {day.displayDate} {day.weekday}
+                    {!day.hasRecord && ' · 暂无记录'}
                   </Text>
-                  <View className={styles.dailyDetailCheckin}>
-                    {['steps', 'water', 'exercise', 'sleep'].map((type) => (
-                      <Text
-                        key={type}
-                        className={classnames(
-                          styles.checkinDot,
-                          day.checkInItems.includes(type) && styles.completed
-                        )}
-                      >
-                        {type === 'steps' && '👟'}
-                        {type === 'water' && '💧'}
-                        {type === 'exercise' && '🏃'}
-                        {type === 'sleep' && '😴'}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-                <View className={styles.dailyDetailStats}>
-                  <View className={styles.dailyStat}>
-                    <Text className={styles.dailyStatIcon}>👟</Text>
-                    <Text className={styles.dailyStatValue}>{day.steps.toLocaleString()} 步</Text>
-                  </View>
-                  <View className={styles.dailyStat}>
-                    <Text className={styles.dailyStatIcon}>💧</Text>
-                    <Text className={styles.dailyStatValue}>{day.waterCups} 杯</Text>
-                  </View>
-                  <View className={styles.dailyStat}>
-                    <Text className={styles.dailyStatIcon}>😴</Text>
-                    <Text className={styles.dailyStatValue}>{day.sleepHours}h</Text>
-                  </View>
-                  {day.hasWeight && day.weight && (
-                    <View className={styles.dailyStat}>
-                      <Text className={styles.dailyStatIcon}>⚖️</Text>
-                      <Text className={styles.dailyStatValue}>{day.weight}kg</Text>
+                  {day.hasRecord && (
+                    <View className={styles.dailyDetailCheckin}>
+                      {['steps', 'water', 'exercise', 'sleep'].map((type) => (
+                        <Text
+                          key={type}
+                          className={classnames(
+                            styles.checkinDot,
+                            day.checkInItems.includes(type) && styles.completed
+                          )}
+                        >
+                          {type === 'steps' && '👟'}
+                          {type === 'water' && '💧'}
+                          {type === 'exercise' && '🏃'}
+                          {type === 'sleep' && '😴'}
+                        </Text>
+                      ))}
                     </View>
                   )}
                 </View>
+                {day.hasRecord ? (
+                  <View className={styles.dailyDetailStats}>
+                    <View className={styles.dailyStat}>
+                      <Text className={styles.dailyStatIcon}>👟</Text>
+                      <Text className={styles.dailyStatValue}>{day.steps.toLocaleString()} 步</Text>
+                    </View>
+                    <View className={styles.dailyStat}>
+                      <Text className={styles.dailyStatIcon}>💧</Text>
+                      <Text className={styles.dailyStatValue}>{day.waterCups} 杯</Text>
+                    </View>
+                    <View className={styles.dailyStat}>
+                      <Text className={styles.dailyStatIcon}>😴</Text>
+                      <Text className={styles.dailyStatValue}>{day.sleepHours}h</Text>
+                    </View>
+                    {day.hasWeight && day.weight && (
+                      <View className={styles.dailyStat}>
+                        <Text className={styles.dailyStatIcon}>⚖️</Text>
+                        <Text className={styles.dailyStatValue}>{day.weight}kg</Text>
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <View className={styles.emptyDay}>
+                    <Text className={styles.emptyDayText}>当天未记录任何数据</Text>
+                  </View>
+                )}
               </View>
             ))}
           </View>
-
-          {queryResults.dayStats.length === 0 && (
-            <View className={styles.emptyState}>
-              <Text className={styles.emptyIcon}>📭</Text>
-              <Text className={styles.emptyText}>该时间段暂无数据</Text>
-            </View>
-          )}
         </View>
       )}
     </ScrollView>

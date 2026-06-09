@@ -24,31 +24,35 @@ const TodayPage: React.FC = () => {
   const checkIn = useHealthStore((state) => state.checkIn);
   const addWaterCup = useHealthStore((state) => state.addWaterCup);
   const [refreshing, setRefreshing] = useState(false);
-
-  const target = getTarget(currentMemberId);
-  const todayRecord = getTodayRecord(currentMemberId) || {
-    steps: 0,
-    exerciseMinutes: 0,
-    waterCups: 0,
-    sleepHours: 0,
-    checkInItems: []
-  };
-  const streak = getCheckInStreak(currentMemberId);
-  const abnormalRecords = getAbnormalRecords(currentMemberId).slice(0, 3);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const today = dayjs().format('YYYY-MM-DD');
+
+  const { target, todayRecord, streak, abnormalRecords } = useMemo(() => {
+    const t = getTarget(currentMemberId);
+    const tr = getTodayRecord(currentMemberId) || {
+      steps: 0,
+      exerciseMinutes: 0,
+      waterCups: 0,
+      sleepHours: 0,
+      checkInItems: []
+    };
+    const s = getCheckInStreak(currentMemberId);
+    const ar = getAbnormalRecords(currentMemberId).slice(0, 3);
+    return { target: t, todayRecord: tr, streak: s, abnormalRecords: ar };
+  }, [currentMemberId, refreshKey, getTarget, getTodayRecord, getCheckInStreak, getAbnormalRecords]);
 
   const stepsStatus = getStepsStatus(todayRecord.steps, target.steps);
   const waterStatus = getWaterStatus(todayRecord.waterCups, target.waterCups);
   const sleepStatus = getSleepStatus(todayRecord.sleepHours);
 
-  const suggestions = generateHealthSuggestions({
+  const suggestions = useMemo(() => generateHealthSuggestions({
     steps: todayRecord.steps,
     exerciseMinutes: todayRecord.exerciseMinutes,
     waterCups: todayRecord.waterCups,
     sleepHours: todayRecord.sleepHours,
     weightChange: 0
-  });
+  }), [todayRecord]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -67,7 +71,8 @@ const TodayPage: React.FC = () => {
   }, [handleRefresh]);
 
   useDidShow(() => {
-    console.log('[TodayPage] Page showed, memberId:', currentMemberId);
+    setRefreshKey((k) => k + 1);
+    console.log('[TodayPage] Page showed, refresh data, memberId:', currentMemberId);
   });
 
   const handleCheckIn = (item: string) => {
